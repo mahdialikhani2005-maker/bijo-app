@@ -1,0 +1,563 @@
+let current = 0;
+let xp = 0;
+
+function speak(text){
+  if (!window.speechSynthesis) return;
+
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = "zh-CN";
+  utter.rate = 0.9;
+
+  speechSynthesis.cancel();
+  speechSynthesis.speak(utter);
+}
+
+window.onload = function() {
+  if (typeof checkAndRegenHearts === 'function') {
+  checkAndRegenHearts();
+}
+
+    if (typeof getHearts === 'function') {
+        const currentHearts = getHearts();
+        const heartElement = document.getElementById("heart-count");
+        if (heartElement) {
+            heartElement.textContent = currentHearts;
+        }
+        
+        // اگر قلب کاربر 0 بود، اجازه شروع درس را نده (اختیاری)
+        if (currentHearts <= 0) {
+            alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
+            window.location.href = "../home.html";
+        }
+    }
+};
+
+
+
+const questions = [
+
+/* IMAGE */
+
+{
+type:"image",
+question:"哪个是红色 ？",
+speak:"hóngsè",
+options:[
+{text:"蓝色",image:"../../media/colors/blue.png"},
+{text:"红色",image:"../../media/colors/red.png"},
+{text:"绿色",image:"../../media/colors/green.png"},
+{text:"黄色",image:"../../media/colors/yellow.png"}
+],
+answer:"红色"
+},
+
+{
+type:"image",
+question:"哪个是蓝色 ？",
+speak:"lánsè",
+options:[
+{text:"黄色",image:"../../media/colors/yellow.png"},
+{text:"蓝色",image:"../../media/colors/blue.png"},
+{text:"黑色",image:"../../media/colors/black.png"},
+{text:"红色",image:"../../media/colors/red.png"}
+],
+answer:"蓝色"
+},
+
+{
+type:"image",
+question:"哪个是绿色 ？",
+speak:"lǜsè",
+options:[
+{text:"红色",image:"../../media/colors/red.png"},
+{text:"绿色",image:"../../media/colors/green.png"},
+{text:"黑色",image:"../../media/colors/black.png"},
+{text:"蓝色",image:"../../media/colors/blue.png"}
+],
+answer:"绿色"
+},
+
+{
+type:"image",
+question:"哪个是黄色 ？",
+speak:"huángsè",
+options:[
+{text:"绿色",image:"../../media/colors/green.png"},
+{text:"蓝色",image:"../../media/colors/blue.png"},
+{text:"黄色",image:"../../media/colors/yellow.png"},
+{text:"红色",image:"../../media/colors/red.png"}
+],
+answer:"黄色"
+},
+
+{
+type:"image",
+question:"哪个是黑色 ？",
+speak:"hēisè",
+options:[
+{text:"黄色",image:"../../media/colors/yellow.png"},
+{text:"红色",image:"../../media/colors/red.png"},
+{text:"蓝色",image:"../../media/colors/blue.png"},
+{text:"黑色",image:"../../media/colors/black.png"}
+],
+answer:"黑色"
+},
+
+/* WORD */
+
+{
+type:"word",
+question:"这是什么颜色？",
+image:"../../media/colors/red.png",
+options:["蓝色","红色","绿色","黄色"],
+answer:"红色"
+},
+
+{
+type:"word",
+question:"这是什么颜色？",
+image:"../../media/colors/blue.png",
+options:["黄色","蓝色","黑色","红色"],
+answer:"蓝色"
+},
+
+{
+type:"word",
+question:"这是什么颜色？",
+image:"../../media/colors/green.png",
+options:["红色","绿色","黑色","蓝色"],
+answer:"绿色"
+},
+
+{
+type:"word",
+question:"这是什么颜色？",
+image:"../../media/colors/yellow.png",
+options:["绿色","蓝色","黄色","红色"],
+answer:"黄色"
+},
+
+{
+type:"word",
+question:"这是什么颜色？",
+image:"../../media/colors/black.png",
+options:["黄色","红色","蓝色","黑色"],
+answer:"黑色"
+},
+
+/* AUDIO */
+
+{
+type:"audio",
+speak:"hóngsè",
+question:"你听到了哪个词？",
+options:["蓝色","红色","绿色","黄色"],
+answer:"红色"
+},
+
+{
+type:"audio",
+speak:"lánsè",
+question:"你听到了哪个词？",
+options:["黄色","蓝色","黑色","红色"],
+answer:"蓝色"
+},
+
+{
+type:"audio",
+speak:"lǜsè",
+question:"你听到了哪个词？",
+options:["红色","绿色","黑色","蓝色"],
+answer:"绿色"
+},
+
+{
+type:"audio",
+speak:"huángsè",
+question:"你听到了哪个词？",
+options:["绿色","蓝色","黄色","红色"],
+answer:"黄色"
+},
+
+{
+type:"audio",
+speak:"hēisè",
+question:"你听到了哪个词？",
+options:["黄色","红色","蓝色","黑色"],
+answer:"黑色"
+},
+
+/* BUILD ZH */
+
+{
+type:"build-zh",
+speak:"这是红色",
+question:"请组成中文句子：",
+text:"این قرمز است",
+words:["红色","这是"],
+answer:["这是","红色"]
+},
+
+{
+type:"build-zh",
+speak:"这是蓝色",
+question:"请组成中文句子：",
+text:"این آبی است",
+words:["蓝色","这是"],
+answer:["这是","蓝色"]
+},
+
+{
+type:"build-zh",
+speak:"这是绿色",
+question:"请组成中文句子：",
+text:"این سبز است",
+words:["绿色","这是"],
+answer:["这是","绿色"]
+},
+
+{
+type:"build-zh",
+speak:"这是黄色",
+question:"请组成中文句子：",
+text:"این زرد است",
+words:["黄色","这是"],
+answer:["这是","黄色"]
+},
+
+{
+type:"build-zh",
+speak:"这是黑色",
+question:"请组成中文句子：",
+text:"این مشکی است",
+words:["黑色","这是"],
+answer:["这是","黑色"]
+},
+
+/* BUILD FA */
+
+{
+type:"build-fa",
+speak:"这是红色",
+question:"ترجمه را بساز:",
+text:"这是红色",
+words:["است","قرمز","این"],
+answer:["این","قرمز","است"]
+},
+
+{
+type:"build-fa",
+speak:"这是蓝色",
+question:"ترجمه را بساز:",
+text:"这是蓝色",
+words:["است","آبی","این"],
+answer:["این","آبی","است"]
+},
+
+{
+type:"build-fa",
+speak:"这是绿色",
+question:"ترجمه را بساز:",
+text:"这是绿色",
+words:["است","سبز","این"],
+answer:["این","سبز","است"]
+},
+
+{
+type:"build-fa",
+speak:"这是黄色",
+question:"ترجمه را بساز:",
+text:"这是黄色",
+words:["است","زرد","این"],
+answer:["این","زرد","است"]
+},
+
+{
+type:"build-fa",
+speak:"这是黑色",
+question:"ترجمه را بساز:",
+text:"这是黑色",
+words:["است","مشکی","این"],
+answer:["این","مشکی","است"]
+}
+
+];
+
+
+
+// =====================================
+// نمایش سوال
+// =====================================
+    // اضافه کردن XP کسب شده به دیتابیس پروفایل در پایان درس
+
+
+    function showQuestion() {
+  if (current >= questions.length) {
+    const finalXP = typeof getTotalXP === "function" ? getTotalXP() : xp;
+
+    document.getElementById("app").innerHTML = `
+      <h2>درس تمام شد 🎉</h2>
+      <p>XP دریافت‌شده: <b>${finalXP}</b></p>
+      <a href="../index.html">بازگشت</a>
+    `;
+    return;
+  }
+
+
+  const q = questions[current];
+  if (q.speak) {
+  setTimeout(() => {
+    speak(q.speak);
+  }, 200);
+}
+
+  const title = document.getElementById("question-title");
+  const content = document.getElementById("question-content");
+  const optionsBox = document.getElementById("options");
+  const wordBuilder = document.getElementById("word-builder");
+
+  title.innerText = q.question;
+  content.innerHTML = "";
+  optionsBox.innerHTML = "";
+  wordBuilder.innerHTML = "";
+wordBuilder.classList.add("hidden");
+
+  // IMAGE SELECTION
+  // IMAGE SELECTION
+if (q.type === "image") {
+  optionsBox.classList.add("image-grid");
+
+ shuffleArray(q.options).forEach(opt => {
+
+    let btn = document.createElement("button");
+    btn.className = "option image-option";
+    btn.innerHTML = `
+      <img src="${opt.image}" alt="${opt.text}">
+    `;
+    btn.onclick = () => select(opt.text);
+    optionsBox.appendChild(btn);
+  });
+}
+
+
+  // WORD FROM IMAGE
+  if (q.type === "word") {
+    content.innerHTML = `<img src="${q.image}">`;
+shuffleArray(q.options).forEach(opt => {
+
+      let b = document.createElement("button");
+      b.className = "option";
+      b.innerText = opt;
+      b.onclick = () => select(opt);
+      optionsBox.appendChild(b);
+    });
+  }
+
+  // AUDIO
+  if (q.type === "audio") {
+    content.innerHTML = `<button class="audio-btn" onclick="speak('${q.speak}')">🔊 پخش</button>`;
+
+shuffleArray(q.options).forEach(opt => {
+      let b = document.createElement("button");
+      b.className = "option";
+      b.innerText = opt;
+      b.onclick = () => select(opt);
+      optionsBox.appendChild(b);
+    });
+  }
+
+  // BUILD ENGLISH
+    // BUILD ENGLISH / FA
+
+  else if (q.type === "build-en" || q.type === "build-fa" || q.type === "build-zh-CN") {
+  content.innerHTML = `<p>${q.text}</p>`;
+
+  const wordBuilder = document.getElementById("word-builder");
+  const optionsBox = document.getElementById("options");
+  if (!wordBuilder || !optionsBox) return;
+
+  // پاک کردن محتوای قبلی
+  wordBuilder.innerHTML = "";
+  optionsBox.innerHTML = "";
+ wordBuilder.classList.remove("hidden");
+  // تنظیم جهت
+  wordBuilder.classList.remove("ltr", "rtl");
+  optionsBox.classList.remove("ltr", "rtl");
+
+if (q.type === "build-en" || q.type === "build-zh-CN") {
+    wordBuilder.classList.add("ltr");
+    optionsBox.classList.add("ltr");
+  } else {
+    wordBuilder.classList.add("rtl");
+    optionsBox.classList.add("rtl");
+  }
+
+shuffleArray(q.words).forEach(w => {
+
+    const tile = document.createElement("span");
+    tile.className = "tile";
+    tile.innerText = w;
+    tile.dataset.word = w;
+
+    // کلیک اول: انتقال از options به word-builder
+    tile.onclick = () => {
+  // اگر کارت در گزینه‌هاست → بفرستش داخل builder
+  if (tile.parentNode === optionsBox) {
+    wordBuilder.appendChild(tile);
+
+  // اگر کارت داخل builder بود → برگردونش به گزینه‌ها
+  } else if (tile.parentNode === wordBuilder) {
+    optionsBox.appendChild(tile);
+  }
+
+  // بررسی کامل بودن جواب
+  const userWords = [...wordBuilder.children].map(el => el.dataset.word);
+  if (userWords.length === q.answer.length) {
+    checkBuild(userWords, q.answer);
+  }
+};
+
+
+    optionsBox.appendChild(tile);
+  });
+}
+
+async function checkBuild(selected, correct) {
+  const s = selected.map(w => w.trim().toLowerCase());
+  const c = correct.map(w => w.trim().toLowerCase());
+
+  if (JSON.stringify(s) === JSON.stringify(c)) {
+    xp += 5;
+
+    if (typeof addXP === "function") {
+      await addXP(5);
+    }
+
+    current++;
+    showQuestion();
+  } else {
+    alert("اشتباه بود! دوباره تلاش کن.");
+
+    if (typeof loseHeart === "function") {
+      await loseHeart();
+    }
+
+    if (typeof checkAndRegenHearts === "function") {
+      checkAndRegenHearts();
+    }
+
+    const heartElement = document.getElementById("heart-count");
+    if (heartElement && typeof getHearts === "function") {
+      heartElement.textContent = getHearts();
+    }
+
+    if (typeof getHearts === "function" && getHearts() <= 0) {
+      document.getElementById("app").innerHTML = `
+        <h2>قلب شما تمام شد 💔</h2>
+        <p>برای ادامه باید صبر کنید تا قلب‌ها برگردند.</p>
+        <a href="../home.html">بازگشت</a>
+      `;
+      return;
+    }
+  }
+}
+
+
+async function select(ans) {
+  const correct = questions[current].answer;
+
+  if (String(ans).trim().toLowerCase() === String(correct).trim().toLowerCase()) {
+    xp += 5;
+
+    if (typeof addXP === "function") {
+      await addXP(5);
+    }
+
+    current++;
+    showQuestion();
+  } else {
+    alert("اشتباه بود! دوباره تلاش کن.");
+
+    if (typeof loseHeart === "function") {
+      await loseHeart();
+    }
+
+    if (typeof checkAndRegenHearts === "function") {
+      checkAndRegenHearts();
+    }
+
+    const heartElement = document.getElementById("heart-count");
+    if (heartElement && typeof getHearts === "function") {
+      heartElement.textContent = getHearts();
+    }
+
+    if (typeof getHearts === "function" && getHearts() <= 0) {
+      document.getElementById("app").innerHTML = `
+        <h2>قلب شما تمام شد 💔</h2>
+        <p>برای ادامه باید صبر کنید تا قلب‌ها برگردند.</p>
+        <a href="../home.html">بازگشت</a>
+      `;
+      return;
+    }
+  }
+}
+
+
+
+  // اگر بعداً آرایه‌ی selected هم ساختی، اینجا باید از آن هم حذف شود
+}
+function removeLastBuilderItem() {
+  const wordBuilder = document.getElementById("word-builder");
+  const optionsBox = document.getElementById("options");
+
+  if (!wordBuilder || !optionsBox) return;
+  if (wordBuilder.children.length === 0) return;
+
+  const lastItem = wordBuilder.lastElementChild;
+  if (lastItem) {
+    optionsBox.prepend(lastItem);
+  }
+}
+
+// Word Builder Keyboard Control
+
+document.addEventListener("keydown", function (e) {
+  const wordBuilder = document.getElementById("word-builder");
+  if (!wordBuilder) return;
+
+  //if (document.activeElement !== wordBuilder) return;
+
+  if (e.key === "Backspace") {
+    e.preventDefault();
+    removeLastBuilderItem();
+  }
+});
+
+function returnTileToOptions(tile) {
+  const optionsBox = document.getElementById("options");
+  if (!optionsBox || !tile) return;
+
+  optionsBox.appendChild(tile);
+  tile.classList.remove("selected");
+
+  if (tile.returnFunction) {
+    tile.removeEventListener("click", tile.returnFunction);
+    delete tile.returnFunction;
+  }
+}
+
+
+function shuffleArray(arr) {
+  let array = [...arr];
+
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+
+  return array;
+}
+
+
+showQuestion(); 

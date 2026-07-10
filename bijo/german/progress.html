@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>پیشرفت</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+
+  <header class="progress-header">
+    <div class="hearts-box">
+      ❤️ <span id="heart-count">5</span>
+      <span id="heart-timer" style="font-size:0.85em; color:#ef5350; margin-left:5px;"></span>
+    </div>
+    <div class="xp-box">
+      ⭐ <span id="total-xp">0</span> XP
+    </div>
+  </header>
+
+  <main class="page">
+    <h2 class="title">پیشرفت</h2>
+
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-title">XP کل</div>
+        <div class="stat-value" id="stat-total-xp">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">دل‌های شما</div>
+        <div class="stat-value" id="stat-hearts">5 ❤️</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">درس‌های تمام‌شده</div>
+        <div class="stat-value" id="stat-lessons-done">0 / 20</div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bottom-nav">
+    <div class="bottom-nav">
+      <a href="../profile.html" class="nav-item">
+        <img src="../assets/icons/profile.png">
+      </a>
+      <a href="progress.html" class="nav-item active">
+        <img src="../assets/icons/progress.png">
+      </a>
+      <a href="index.html" class="nav-item">
+        <img src="../assets/icons/lesson.png">
+      </a>
+    </div>
+  </footer>
+
+  <script src="../dataStorage.js"></script>
+  <script>
+    window.onload = async function() {
+      await initUserData();
+
+      const hearts = getHearts();
+      const xp = getTotalXP();
+
+      document.getElementById("heart-count").textContent = hearts;
+      document.getElementById("total-xp").textContent = xp;
+      document.getElementById("stat-total-xp").textContent = xp;
+      document.getElementById("stat-hearts").textContent = hearts + " ❤️";
+
+      const lessonsCompleted = parseInt(localStorage.getItem("lessonsCompleted") || "0");
+      document.getElementById("stat-lessons-done").textContent = lessonsCompleted + " / 20";
+
+      setInterval(() => {
+        checkAndRegenHearts();
+        const h = getHearts();
+        document.getElementById("heart-count").textContent = h;
+        document.getElementById("stat-hearts").textContent = h + " ❤️";
+
+        const timerElement = document.getElementById("heart-timer");
+        const seconds = getTimeUntilNextHeart();
+        if (seconds === null) {
+          timerElement.textContent = "";
+        } else {
+          const hr = Math.floor(seconds / 3600);
+          const mn = Math.floor((seconds % 3600) / 60);
+          const sc = seconds % 60;
+          timerElement.textContent = ` (${hr}:${String(mn).padStart(2,"0")}:${String(sc).padStart(2,"0")})`;
+        }
+      }, 1000);
+    };
+  </script>
+
+</body>
+</html>
