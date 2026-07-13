@@ -1,5 +1,0 @@
-services:
-  - type: web
-    name: bijo-app
-    runtime: static
-    staticPublishPath: .
