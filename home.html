@@ -1,15 +1,35 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Language Courses</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Bijo - اپلیکیشن آموزش زبان</title>
+    
+    <!-- CSS -->
     <link rel="stylesheet" href="style.css" />
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#4A90E2" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Bijo" />
+    
+    <!-- Icons -->
     <link rel="icon" type="image/png" href="media/pp.png" />
     <link rel="apple-touch-icon" href="media/pp.png" />
-    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" sizes="192x192" href="assets/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="assets/icon-512.png" />
+    
+    <!-- برای اینکه تو مرورگر موبایل شبیه اپ بشه -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="format-detection" content="telephone=no" />
+    
+    <!-- Open Graph (برای وقتی لینک به اشتراک گذاشته میشه) -->
+    <meta property="og:title" content="Bijo App" />
+    <meta property="og:description" content="اپلیکیشن آموزش زبان" />
+    <meta property="og:image" content="media/pp.png" />
 </head>
-
 <body>
 
     <div class="brand">
@@ -79,6 +99,27 @@
 
         </div>
     </div>
+<script>
+  // ثبت سرویس ورکر برای PWA
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(registration => {
+          console.log('Service Worker registered successfully:', registration);
+        })
+        .catch(error => {
+          console.log('Service Worker registration failed:', error);
+        });
+    });
+  }
 
+  // بررسی اینکه برنامه نصب شده یا نه
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // جلوگیری از نمایش خودکار
+    e.preventDefault();
+    // اینجا میتونی دکمه نصب رو به کاربر نشون بدی
+    console.log('App can be installed!');
+  });
+</script>
 </body>
 </html>

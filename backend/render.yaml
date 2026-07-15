@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: bijo-backend
+    env: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && python server.py
+    plan: free
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.4
