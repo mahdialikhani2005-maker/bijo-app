@@ -1,563 +1,639 @@
+// ============================================================
+//  متغیرهای عمومی
+// ============================================================
 let current = 0;
 let xp = 0;
+let hearts = 5;
+let totalQuestions = 0;
+let isAnswering = false;
 
-function speak(text){
+// ============================================================
+//  دیتابیس سوالات (با ترجمه فارسی)
+// ============================================================
+const questions = [
+  // -------- IMAGE SELECTION --------
+  {
+    type: "image",
+    question: "哪个是热 ？",
+    questionFa: "کدوم یکی گرم هست؟",
+    speak: "rè",
+    options: [
+      { text: "冷", image: "../../media/weather/cold.png" },
+      { text: "热", image: "../../media/weather/hot.png" },
+      { text: "晴天", image: "../../media/weather/sunny.png" },
+      { text: "多云", image: "../../media/weather/cloudy.png" }
+    ],
+    answer: "热"
+  },
+  {
+    type: "image",
+    question: "哪个是冷 ？",
+    questionFa: "کدوم یکی سرد هست؟",
+    speak: "lěng",
+    options: [
+      { text: "晴天", image: "../../media/weather/sunny.png" },
+      { text: "冷", image: "../../media/weather/cold.png" },
+      { text: "风", image: "../../media/weather/wind.png" },
+      { text: "热", image: "../../media/weather/hot.png" }
+    ],
+    answer: "冷"
+  },
+  {
+    type: "image",
+    question: "哪个是晴天 ？",
+    questionFa: "کدوم یکی آفتابی هست؟",
+    speak: "qíngtiān",
+    options: [
+      { text: "热", image: "../../media/weather/hot.png" },
+      { text: "晴天", image: "../../media/weather/sunny.png" },
+      { text: "风", image: "../../media/weather/wind.png" },
+      { text: "冷", image: "../../media/weather/cold.png" }
+    ],
+    answer: "晴天"
+  },
+  {
+    type: "image",
+    question: "哪个是多云 ？",
+    questionFa: "کدوم یکی ابری هست؟",
+    speak: "duōyún",
+    options: [
+      { text: "晴天", image: "../../media/weather/sunny.png" },
+      { text: "冷", image: "../../media/weather/cold.png" },
+      { text: "多云", image: "../../media/weather/cloudy.png" },
+      { text: "热", image: "../../media/weather/hot.png" }
+    ],
+    answer: "多云"
+  },
+  {
+    type: "image",
+    question: "哪个是风 ？",
+    questionFa: "کدوم یکی باد هست؟",
+    speak: "fēng",
+    options: [
+      { text: "多云", image: "../../media/weather/cloudy.png" },
+      { text: "热", image: "../../media/weather/hot.png" },
+      { text: "冷", image: "../../media/weather/cold.png" },
+      { text: "风", image: "../../media/weather/wind.png" }
+    ],
+    answer: "风"
+  },
+
+  // -------- WORD FROM IMAGE --------
+  {
+    type: "word",
+    question: "这是什么图片？",
+    questionFa: "این عکس چیه؟",
+    image: "../../media/weather/hot.png",
+    options: ["冷", "热", "晴天", "多云"],
+    answer: "热"
+  },
+  {
+    type: "word",
+    question: "这是什么图片？",
+    questionFa: "این عکس چیه؟",
+    image: "../../media/weather/cold.png",
+    options: ["晴天", "冷", "风", "热"],
+    answer: "冷"
+  },
+  {
+    type: "word",
+    question: "这是什么图片？",
+    questionFa: "این عکس چیه؟",
+    image: "../../media/weather/sunny.png",
+    options: ["热", "晴天", "风", "冷"],
+    answer: "晴天"
+  },
+  {
+    type: "word",
+    question: "这是什么图片？",
+    questionFa: "این عکس چیه؟",
+    image: "../../media/weather/cloudy.png",
+    options: ["晴天", "冷", "多云", "热"],
+    answer: "多云"
+  },
+  {
+    type: "word",
+    question: "这是什么图片？",
+    questionFa: "این عکس چیه؟",
+    image: "../../media/weather/wind.png",
+    options: ["多云", "热", "冷", "风"],
+    answer: "风"
+  },
+
+  // -------- AUDIO --------
+  {
+    type: "audio",
+    speak: "rè",
+    question: "你听到了哪个词？",
+    questionFa: "کدوم کلمه رو شنیدی؟",
+    options: ["冷", "热", "晴天", "多云"],
+    answer: "热"
+  },
+  {
+    type: "audio",
+    speak: "lěng",
+    question: "你听到了哪个词？",
+    questionFa: "کدوم کلمه رو شنیدی؟",
+    options: ["晴天", "冷", "风", "热"],
+    answer: "冷"
+  },
+  {
+    type: "audio",
+    speak: "qíngtiān",
+    question: "你听到了哪个词？",
+    questionFa: "کدوم کلمه رو شنیدی؟",
+    options: ["热", "晴天", "风", "冷"],
+    answer: "晴天"
+  },
+  {
+    type: "audio",
+    speak: "duōyún",
+    question: "你听到了哪个词？",
+    questionFa: "کدوم کلمه رو شنیدی؟",
+    options: ["晴天", "冷", "多云", "热"],
+    answer: "多云"
+  },
+  {
+    type: "audio",
+    speak: "fēng",
+    question: "你听到了哪个词？",
+    questionFa: "کدوم کلمه رو شنیدی؟",
+    options: ["多云", "热", "冷", "风"],
+    answer: "风"
+  },
+
+  // -------- BUILD ZH (ساختن جمله چینی) --------
+  {
+    type: "build-zh",
+    speak: "天气热",
+    question: "请组成中文句子：",
+    questionFa: "جمله چینی رو بساز:",
+    text: "هوا گرم است",
+    words: ["天气", "热"],
+    answer: ["天气", "热"]
+  },
+  {
+    type: "build-zh",
+    speak: "天气冷",
+    question: "请组成中文句子：",
+    questionFa: "جمله چینی رو بساز:",
+    text: "هوا سرد است",
+    words: ["天气", "冷"],
+    answer: ["天气", "冷"]
+  },
+  {
+    type: "build-zh",
+    speak: "天气晴朗",
+    question: "请组成中文句子：",
+    questionFa: "جمله چینی رو بساز:",
+    text: "هوا آفتابی است",
+    words: ["天气", "晴朗"],
+    answer: ["天气", "晴朗"]
+  },
+  {
+    type: "build-zh",
+    speak: "天气多云",
+    question: "请组成中文句子：",
+    questionFa: "جمله چینی رو بساز:",
+    text: "هوا ابری است",
+    words: ["天气", "多云"],
+    answer: ["天气", "多云"]
+  },
+  {
+    type: "build-zh",
+    speak: "天气有风",
+    question: "请组成中文句子：",
+    questionFa: "جمله چینی رو بساز:",
+    text: "هوا بادی است",
+    words: ["天气", "有风"],
+    answer: ["天气", "有风"]
+  },
+
+  // -------- BUILD FA (ساختن جمله فارسی) --------
+  {
+    type: "build-fa",
+    speak: "天气热",
+    question: "ترجمه را بساز:",
+    questionFa: "ترجمه فارسی رو بساز:",
+    text: "天气热",
+    words: ["است", "گرم", "هوا"],
+    answer: ["هوا", "گرم", "است"]
+  },
+  {
+    type: "build-fa",
+    speak: "天气冷",
+    question: "ترجمه را بساز:",
+    questionFa: "ترجمه فارسی رو بساز:",
+    text: "天气冷",
+    words: ["است", "سرد", "هوا"],
+    answer: ["هوا", "سرد", "است"]
+  },
+  {
+    type: "build-fa",
+    speak: "天气晴朗",
+    question: "ترجمه را بساز:",
+    questionFa: "ترجمه فارسی رو بساز:",
+    text: "天气晴朗",
+    words: ["است", "آفتابی", "هوا"],
+    answer: ["هوا", "آفتابی", "است"]
+  },
+  {
+    type: "build-fa",
+    speak: "天气多云",
+    question: "ترجمه را بساز:",
+    questionFa: "ترجمه فارسی رو بساز:",
+    text: "天气多云",
+    words: ["است", "ابری", "هوا"],
+    answer: ["هوا", "ابری", "است"]
+  },
+  {
+    type: "build-fa",
+    speak: "天气有风",
+    question: "ترجمه را بساز:",
+    questionFa: "ترجمه فارسی رو بساز:",
+    text: "天气有风",
+    words: ["است", "بادی", "هوا"],
+    answer: ["هوا", "بادی", "است"]
+  }
+];
+
+// ============================================================
+//  توابع کمکی
+// ============================================================
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function speak(text) {
   if (!window.speechSynthesis) return;
-
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = "zh-CN";
   utter.rate = 0.9;
-
   speechSynthesis.cancel();
   speechSynthesis.speak(utter);
 }
 
-window.onload = function() {
-  if (typeof checkAndRegenHearts === 'function') {
-  checkAndRegenHearts();
+// ============================================================
+//  توابع ارتباط با dataStorage.js
+// ============================================================
+function updateUIStats() {
+  if (typeof getHearts === "function") {
+    hearts = getHearts();
+  }
+  const heartEl = document.getElementById("heart-count");
+  const xpEl = document.getElementById("xp-display");
+  if (heartEl) heartEl.textContent = hearts;
+  if (xpEl) xpEl.textContent = typeof getTotalXP === "function" ? getTotalXP() : xp;
 }
 
-    if (typeof getHearts === 'function') {
-        const currentHearts = getHearts();
-        const heartElement = document.getElementById("heart-count");
-        if (heartElement) {
-            heartElement.textContent = currentHearts;
-        }
-        
-        // اگر قلب کاربر 0 بود، اجازه شروع درس را نده (اختیاری)
-        if (currentHearts <= 0) {
-            alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
-            window.location.href = "../home.html";
-        }
-    }
-};
-
-
-
-const questions = [
-
-/* IMAGE */
-
-{
-type:"image",
-question:"哪个是热 ？",
-speak:"rè",
-options:[
-{text:"冷",image:"../../media/weather/cold.png"},
-{text:"热",image:"../../media/weather/hot.png"},
-{text:"晴天",image:"../../media/weather/sunny.png"},
-{text:"多云",image:"../../media/weather/cloudy.png"}
-],
-answer:"热"
-},
-
-{
-type:"image",
-question:"哪个是冷 ？",
-speak:"lěng",
-options:[
-{text:"晴天",image:"../../media/weather/sunny.png"},
-{text:"冷",image:"../../media/weather/cold.png"},
-{text:"风",image:"../../media/weather/wind.png"},
-{text:"热",image:"../../media/weather/hot.png"}
-],
-answer:"冷"
-},
-
-{
-type:"image",
-question:"哪个是晴天 ？",
-speak:"qíngtiān",
-options:[
-{text:"热",image:"../../media/weather/hot.png"},
-{text:"晴天",image:"../../media/weather/sunny.png"},
-{text:"风",image:"../../media/weather/wind.png"},
-{text:"冷",image:"../../media/weather/cold.png"}
-],
-answer:"晴天"
-},
-
-{
-type:"image",
-question:"哪个是多云 ？",
-speak:"duōyún",
-options:[
-{text:"晴天",image:"../../media/weather/sunny.png"},
-{text:"冷",image:"../../media/weather/cold.png"},
-{text:"多云",image:"../../media/weather/cloudy.png"},
-{text:"热",image:"../../media/weather/hot.png"}
-],
-answer:"多云"
-},
-
-{
-type:"image",
-question:"哪个是风 ？",
-speak:"fēng",
-options:[
-{text:"多云",image:"../../media/weather/cloudy.png"},
-{text:"热",image:"../../media/weather/hot.png"},
-{text:"冷",image:"../../media/weather/cold.png"},
-{text:"风",image:"../../media/weather/wind.png"}
-],
-answer:"风"
-},
-
-/* WORD */
-
-{
-type:"word",
-question:"这是什么图片？",
-image:"../../media/weather/hot.png",
-options:["冷","热","晴天","多云"],
-answer:"热"
-},
-
-{
-type:"word",
-question:"这是什么图片？",
-image:"../../media/weather/cold.png",
-options:["晴天","冷","风","热"],
-answer:"冷"
-},
-
-{
-type:"word",
-question:"这是什么图片？",
-image:"../../media/weather/sunny.png",
-options:["热","晴天","风","冷"],
-answer:"晴天"
-},
-
-{
-type:"word",
-question:"这是什么图片？",
-image:"../../media/weather/cloudy.png",
-options:["晴天","冷","多云","热"],
-answer:"多云"
-},
-
-{
-type:"word",
-question:"这是什么图片？",
-image:"../../media/weather/wind.png",
-options:["多云","热","冷","风"],
-answer:"风"
-},
-
-/* AUDIO */
-
-{
-type:"audio",
-speak:"rè",
-question:"你听到了哪个词？",
-options:["冷","热","晴天","多云"],
-answer:"热"
-},
-
-{
-type:"audio",
-speak:"lěng",
-question:"你听到了哪个词？",
-options:["晴天","冷","风","热"],
-answer:"冷"
-},
-
-{
-type:"audio",
-speak:"qíngtiān",
-question:"你听到了哪个词？",
-options:["热","晴天","风","冷"],
-answer:"晴天"
-},
-
-{
-type:"audio",
-speak:"duōyún",
-question:"你听到了哪个词？",
-options:["晴天","冷","多云","热"],
-answer:"多云"
-},
-
-{
-type:"audio",
-speak:"fēng",
-question:"你听到了哪个词？",
-options:["多云","热","冷","风"],
-answer:"风"
-},
-
-/* BUILD ZH */
-
-{
-type:"build-zh",
-speak:"天气热",
-question:"请组成中文句子：",
-text:"هوا گرم است",
-words:["天气","热"],
-answer:["天气","热"]
-},
-
-{
-type:"build-zh",
-speak:"天气冷",
-question:"请组成中文句子：",
-text:"هوا سرد است",
-words:["天气","冷"],
-answer:["天气","冷"]
-},
-
-{
-type:"build-zh",
-speak:"天气晴朗",
-question:"请组成中文句子：",
-text:"هوا آفتابی است",
-words:["天气","晴朗"],
-answer:["天气","晴朗"]
-},
-
-{
-type:"build-zh",
-speak:"天气多云",
-question:"请组成中文句子：",
-text:"هوا ابری است",
-words:["天气","多云"],
-answer:["天气","多云"]
-},
-
-{
-type:"build-zh",
-speak:"天气有风",
-question:"请组成中文句子：",
-text:"هوا بادی است",
-words:["天气","有风"],
-answer:["天气","有风"]
-},
-
-/* BUILD FA */
-
-{
-type:"build-fa",
-speak:"天气热",
-question:"ترجمه را بساز:",
-text:"天气热",
-words:["است","گرم","هوا"],
-answer:["هوا","گرم","است"]
-},
-
-{
-type:"build-fa",
-speak:"天气冷",
-question:"ترجمه را بساز:",
-text:"天气冷",
-words:["است","سرد","هوا"],
-answer:["هوا","سرد","است"]
-},
-
-{
-type:"build-fa",
-speak:"天气晴朗",
-question:"ترجمه را بساز:",
-text:"天气晴朗",
-words:["است","آفتابی","هوا"],
-answer:["هوا","آفتابی","است"]
-},
-
-{
-type:"build-fa",
-speak:"天气多云",
-question:"ترجمه را بساز:",
-text:"天气多云",
-words:["است","ابری","هوا"],
-answer:["هوا","ابری","است"]
-},
-
-{
-type:"build-fa",
-speak:"天气有风",
-question:"ترجمه را بساز:",
-text:"天气有风",
-words:["است","بادی","هوا"],
-answer:["هوا","بادی","است"]
+async function handleCorrectAnswer() {
+  xp += 5;
+  if (typeof addXP === "function") {
+    await addXP(5);
+  }
+  updateUIStats();
 }
 
-];
+async function handleWrongAnswer() {
+  if (typeof loseHeart === "function") {
+    await loseHeart();
+  }
+  if (typeof checkAndRegenHearts === "function") {
+    checkAndRegenHearts();
+  }
+  updateUIStats();
 
+  if (hearts <= 0) {
+    document.getElementById("app").innerHTML = `
+      <div style="text-align:center; padding:40px 20px;">
+        <h2 style="color:#e74c3c;">💔 قلبتان تمام شد!</h2>
+        <p style="color:#4a5a7a;">لطفاً کمی صبر کنید تا قلب‌ها بازیابی شوند.</p>
+        <a href="../index.html" style="display:inline-block; margin-top:20px; background:#4a6cf7; color:#fff; padding:12px 32px; border-radius:60px; text-decoration:none;">بازگشت به خانه</a>
+      </div>
+    `;
+    return true;
+  }
+  return false;
+}
 
+// ============================================================
+//  نمایش پیام بازخورد
+// ============================================================
+function showFeedback(text, type) {
+  const el = document.getElementById("feedback-message");
+  if (!el) return;
+  el.textContent = text;
+  el.className = "feedback-message show " + type;
+  clearTimeout(el._timeout);
+  el._timeout = setTimeout(() => {
+    el.className = "feedback-message";
+  }, 800);
+}
 
-// =====================================
-// نمایش سوال
-// =====================================
-    // اضافه کردن XP کسب شده به دیتابیس پروفایل در پایان درس
-
-
-    function showQuestion() {
+// ============================================================
+//  نمایش سوال
+// ============================================================
+function showQuestion() {
   if (current >= questions.length) {
     const finalXP = typeof getTotalXP === "function" ? getTotalXP() : xp;
-
     document.getElementById("app").innerHTML = `
-      <h2>درس تمام شد 🎉</h2>
-      <p>XP دریافت‌شده: <b>${finalXP}</b></p>
-      <a href="../index.html">بازگشت</a>
+      <div style="text-align:center; padding:40px 20px;">
+        <h2 style="color:#2ecc71;">🎉 درس تمام شد!</h2>
+        <p style="color:#1e2a41; font-size:1.2rem;">امتیاز کسب‌شده: <b>${finalXP}</b> XP</p>
+        <a href="../index.html" style="display:inline-block; margin-top:24px; background:#4a6cf7; color:#fff; padding:14px 44px; border-radius:60px; text-decoration:none;">بازگشت به خانه</a>
+      </div>
     `;
+    document.getElementById("progress-bar").style.width = "100%";
+    const footer = document.getElementById("lesson-footer");
+    if (footer) footer.style.display = "none";
     return;
   }
 
-
   const q = questions[current];
+  totalQuestions = questions.length;
+  
+  const currentNumEl = document.getElementById("current-q-num");
+  const totalNumEl = document.getElementById("total-q-count");
+  const progressBar = document.getElementById("progress-bar");
+  
+  if (currentNumEl) currentNumEl.textContent = current + 1;
+  if (totalNumEl) totalNumEl.textContent = totalQuestions;
+  if (progressBar) progressBar.style.width = ((current / totalQuestions) * 100) + "%";
+
+  // پخش صدا
   if (q.speak) {
-  setTimeout(() => {
-    speak(q.speak);
-  }, 200);
-}
+    setTimeout(() => speak(q.speak), 300);
+  }
 
   const title = document.getElementById("question-title");
   const content = document.getElementById("question-content");
   const optionsBox = document.getElementById("options");
   const wordBuilder = document.getElementById("word-builder");
 
-  title.innerText = q.question;
-  content.innerHTML = "";
-  optionsBox.innerHTML = "";
-  wordBuilder.innerHTML = "";
-wordBuilder.classList.add("hidden");
-
-  // IMAGE SELECTION
-  // IMAGE SELECTION
-if (q.type === "image") {
-  optionsBox.classList.add("image-grid");
-
- shuffleArray(q.options).forEach(opt => {
-
-    let btn = document.createElement("button");
-    btn.className = "option image-option";
-    btn.innerHTML = `
-      <img src="${opt.image}" alt="${opt.text}">
+  // نمایش سوال با ترجمه فارسی
+  if (title) {
+    title.innerHTML = `
+      ${q.question}
+      <span style="display:block; font-size:0.9rem; font-weight:400; color:#7c8ba0; margin-top:4px;">
+        ${q.questionFa || ''}
+      </span>
     `;
-    btn.onclick = () => select(opt.text);
-    optionsBox.appendChild(btn);
-  });
+  }
+
+  if (content) content.innerHTML = "";
+  if (optionsBox) optionsBox.innerHTML = "";
+  if (wordBuilder) {
+    wordBuilder.innerHTML = "";
+    wordBuilder.classList.add("hidden");
+  }
+  
+  const resetBtn = document.getElementById("reset-builder-btn");
+  if (resetBtn) resetBtn.style.display = "none";
+  
+  isAnswering = false;
+
+  // ----- نوع سوال -----
+  if (q.type === "image") {
+    if (optionsBox) optionsBox.className = "options-container image-grid";
+    shuffleArray(q.options).forEach(opt => {
+      const btn = document.createElement("button");
+      btn.className = "option image-option";
+      btn.innerHTML = `<img src="${opt.image}" alt="${opt.text}" />`;
+      btn.dataset.value = opt.text;
+      btn.onclick = () => handleOptionClick(btn, q.answer);
+      if (optionsBox) optionsBox.appendChild(btn);
+    });
+  } 
+  else if (q.type === "word") {
+    if (content) content.innerHTML = `<img src="${q.image}" alt="word" />`;
+    if (optionsBox) optionsBox.className = "options-container";
+    shuffleArray(q.options).forEach(opt => {
+      const btn = document.createElement("button");
+      btn.className = "option";
+      btn.innerText = opt;
+      btn.dataset.value = opt;
+      btn.onclick = () => handleOptionClick(btn, q.answer);
+      if (optionsBox) optionsBox.appendChild(btn);
+    });
+  } 
+  else if (q.type === "audio") {
+    if (content) {
+      content.innerHTML = `<button class="audio-btn" onclick="speak('${q.speak}')">🔊 پخش صدا</button>`;
+    }
+    if (optionsBox) optionsBox.className = "options-container";
+    shuffleArray(q.options).forEach(opt => {
+      const btn = document.createElement("button");
+      btn.className = "option";
+      btn.innerText = opt;
+      btn.dataset.value = opt;
+      btn.onclick = () => handleOptionClick(btn, q.answer);
+      if (optionsBox) optionsBox.appendChild(btn);
+    });
+  } 
+  else if (q.type === "build-zh" || q.type === "build-fa") {
+    if (content) {
+      content.innerHTML = `<p style="font-size:1.2rem; font-weight:500; color:#1e2a41;">${q.text}</p>`;
+    }
+    if (wordBuilder) {
+      wordBuilder.classList.remove("hidden");
+    }
+    if (resetBtn) resetBtn.style.display = "inline-block";
+
+    if (wordBuilder) {
+      wordBuilder.classList.remove("ltr", "rtl");
+      if (q.type === "build-zh") {
+        wordBuilder.classList.add("ltr");
+      } else {
+        wordBuilder.classList.add("rtl");
+      }
+    }
+    
+    if (optionsBox) {
+      optionsBox.classList.remove("ltr", "rtl");
+      if (q.type === "build-zh") {
+        optionsBox.classList.add("ltr");
+      } else {
+        optionsBox.classList.add("rtl");
+      }
+    }
+
+    shuffleArray(q.words).forEach(w => {
+      const tile = document.createElement("span");
+      tile.className = "tile";
+      tile.innerText = w;
+      tile.dataset.word = w;
+      tile.onclick = () => handleTileClick(tile, q);
+      if (optionsBox) optionsBox.appendChild(tile);
+    });
+  }
 }
 
+// ============================================================
+//  کلیک روی گزینه‌ها
+// ============================================================
+async function handleOptionClick(btn, correctAnswer) {
+  if (isAnswering) return;
+  isAnswering = true;
 
-  // WORD FROM IMAGE
-  if (q.type === "word") {
-    content.innerHTML = `<img src="${q.image}">`;
-shuffleArray(q.options).forEach(opt => {
+  const selected = btn.dataset.value;
+  const isCorrect = String(selected).trim().toLowerCase() === String(correctAnswer).trim().toLowerCase();
 
-      let b = document.createElement("button");
-      b.className = "option";
-      b.innerText = opt;
-      b.onclick = () => select(opt);
-      optionsBox.appendChild(b);
+  document.querySelectorAll(".option").forEach(b => b.classList.add("disabled"));
+
+  if (isCorrect) {
+    btn.classList.add("correct");
+    showFeedback("✅ عالی!", "correct");
+    await handleCorrectAnswer();
+    setTimeout(() => {
+      current++;
+      showQuestion();
+    }, 700);
+  } else {
+    btn.classList.add("wrong");
+    document.querySelectorAll(".option").forEach(b => {
+      if (String(b.dataset.value).trim().toLowerCase() === String(correctAnswer).trim().toLowerCase()) {
+        b.classList.add("correct");
+      }
     });
+    showFeedback("❌ دوباره تلاش کن", "wrong");
+    const stopped = await handleWrongAnswer();
+    if (!stopped) {
+      setTimeout(() => {
+        document.querySelectorAll(".option").forEach(b => {
+          b.classList.remove("wrong", "correct", "disabled");
+        });
+        isAnswering = false;
+      }, 1000);
+    } else {
+      isAnswering = true;
+    }
   }
+}
 
-  // AUDIO
-  if (q.type === "audio") {
-    content.innerHTML = `<button class="audio-btn" onclick="speak('${q.speak}')">🔊 پخش</button>`;
-
-shuffleArray(q.options).forEach(opt => {
-      let b = document.createElement("button");
-      b.className = "option";
-      b.innerText = opt;
-      b.onclick = () => select(opt);
-      optionsBox.appendChild(b);
-    });
-  }
-
-  // BUILD ENGLISH
-    // BUILD ENGLISH / FA
-
-  else if (q.type === "build-en" || q.type === "build-fa" || q.type === "build-zh-CN") {
-  content.innerHTML = `<p>${q.text}</p>`;
-
+// ============================================================
+//  کلیک روی کاشی‌های builder
+// ============================================================
+function handleTileClick(tile, q) {
+  if (isAnswering) return;
   const wordBuilder = document.getElementById("word-builder");
   const optionsBox = document.getElementById("options");
-  if (!wordBuilder || !optionsBox) return;
 
-  // پاک کردن محتوای قبلی
-  wordBuilder.innerHTML = "";
-  optionsBox.innerHTML = "";
- wordBuilder.classList.remove("hidden");
-  // تنظیم جهت
-  wordBuilder.classList.remove("ltr", "rtl");
-  optionsBox.classList.remove("ltr", "rtl");
-
-if (q.type === "build-en" || q.type === "build-zh-CN") {
-    wordBuilder.classList.add("ltr");
-    optionsBox.classList.add("ltr");
-  } else {
-    wordBuilder.classList.add("rtl");
-    optionsBox.classList.add("rtl");
-  }
-
-shuffleArray(q.words).forEach(w => {
-
-    const tile = document.createElement("span");
-    tile.className = "tile";
-    tile.innerText = w;
-    tile.dataset.word = w;
-
-    // کلیک اول: انتقال از options به word-builder
-    tile.onclick = () => {
-  // اگر کارت در گزینه‌هاست → بفرستش داخل builder
   if (tile.parentNode === optionsBox) {
     wordBuilder.appendChild(tile);
-
-  // اگر کارت داخل builder بود → برگردونش به گزینه‌ها
   } else if (tile.parentNode === wordBuilder) {
     optionsBox.appendChild(tile);
   }
 
-  // بررسی کامل بودن جواب
   const userWords = [...wordBuilder.children].map(el => el.dataset.word);
   if (userWords.length === q.answer.length) {
     checkBuild(userWords, q.answer);
   }
-};
-
-
-    optionsBox.appendChild(tile);
-  });
 }
 
+// ============================================================
+//  بررسی جواب builder
+// ============================================================
 async function checkBuild(selected, correct) {
+  if (isAnswering) return;
+  isAnswering = true;
+
   const s = selected.map(w => w.trim().toLowerCase());
   const c = correct.map(w => w.trim().toLowerCase());
+  const isCorrect = JSON.stringify(s) === JSON.stringify(c);
 
-  if (JSON.stringify(s) === JSON.stringify(c)) {
-    xp += 5;
+  document.querySelectorAll(".tile").forEach(t => t.style.pointerEvents = "none");
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
-
-    current++;
-    showQuestion();
+  if (isCorrect) {
+    showFeedback("✅ عالی!", "correct");
+    await handleCorrectAnswer();
+    setTimeout(() => {
+      current++;
+      showQuestion();
+    }, 700);
   } else {
-    alert("اشتباه بود! دوباره تلاش کن.");
-
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
-
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
-
-    if (typeof getHearts === "function" && getHearts() <= 0) {
-      document.getElementById("app").innerHTML = `
-        <h2>قلب شما تمام شد 💔</h2>
-        <p>برای ادامه باید صبر کنید تا قلب‌ها برگردند.</p>
-        <a href="../home.html">بازگشت</a>
-      `;
-      return;
+    showFeedback("❌ دوباره تلاش کن", "wrong");
+    const stopped = await handleWrongAnswer();
+    if (!stopped) {
+      setTimeout(() => {
+        resetBuilder();
+        document.querySelectorAll(".tile").forEach(t => t.style.pointerEvents = "");
+        isAnswering = false;
+      }, 1000);
+    } else {
+      isAnswering = true;
     }
   }
 }
 
-
-async function select(ans) {
-  const correct = questions[current].answer;
-
-  if (String(ans).trim().toLowerCase() === String(correct).trim().toLowerCase()) {
-    xp += 5;
-
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
-
-    current++;
-    showQuestion();
-  } else {
-    alert("اشتباه بود! دوباره تلاش کن.");
-
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
-
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
-
-    if (typeof getHearts === "function" && getHearts() <= 0) {
-      document.getElementById("app").innerHTML = `
-        <h2>قلب شما تمام شد 💔</h2>
-        <p>برای ادامه باید صبر کنید تا قلب‌ها برگردند.</p>
-        <a href="../home.html">بازگشت</a>
-      `;
-      return;
-    }
-  }
-}
-
-
-
-  // اگر بعداً آرایه‌ی selected هم ساختی، اینجا باید از آن هم حذف شود
-}
-function removeLastBuilderItem() {
+// ============================================================
+//  دکمه پاک کردن builder
+// ============================================================
+function resetBuilder() {
   const wordBuilder = document.getElementById("word-builder");
   const optionsBox = document.getElementById("options");
-
   if (!wordBuilder || !optionsBox) return;
-  if (wordBuilder.children.length === 0) return;
-
-  const lastItem = wordBuilder.lastElementChild;
-  if (lastItem) {
-    optionsBox.prepend(lastItem);
+  while (wordBuilder.children.length > 0) {
+    const tile = wordBuilder.firstElementChild;
+    optionsBox.appendChild(tile);
   }
 }
 
-// Word Builder Keyboard Control
-
-document.addEventListener("keydown", function (e) {
+// ============================================================
+//  رویدادهای کلید
+// ============================================================
+document.addEventListener("keydown", function(e) {
   const wordBuilder = document.getElementById("word-builder");
-  if (!wordBuilder) return;
-
-  //if (document.activeElement !== wordBuilder) return;
-
+  if (!wordBuilder || wordBuilder.classList.contains("hidden")) return;
   if (e.key === "Backspace") {
     e.preventDefault();
-    removeLastBuilderItem();
+    const last = wordBuilder.lastElementChild;
+    if (last) {
+      document.getElementById("options").appendChild(last);
+    }
   }
 });
 
-function returnTileToOptions(tile) {
-  const optionsBox = document.getElementById("options");
-  if (!optionsBox || !tile) return;
-
-  optionsBox.appendChild(tile);
-  tile.classList.remove("selected");
-
-  if (tile.returnFunction) {
-    tile.removeEventListener("click", tile.returnFunction);
-    delete tile.returnFunction;
+// ============================================================
+//  بارگذاری اولیه
+// ============================================================
+window.onload = function() {
+  if (typeof checkAndRegenHearts === "function") {
+    checkAndRegenHearts();
   }
-}
+  updateUIStats();
 
-
-function shuffleArray(arr) {
-  let array = [...arr];
-
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-
-    [array[i], array[j]] = [array[j], array[i]];
+  if (hearts <= 0) {
+    alert("💔 قلب شما تمام شده! لطفاً کمی صبر کنید.");
+    window.location.href = "../index.html";
+    return;
   }
 
-  return array;
-}
+  const backBtn = document.getElementById("back-to-intro");
+  if (backBtn) {
+    backBtn.addEventListener("click", () => {
+      const params = new URLSearchParams(window.location.search);
+      const lesson = params.get("lesson") || "zh-lesson10";
+      window.location.href = `intro.html?lesson=${lesson}`;
+    });
+  }
 
+  const resetBtn = document.getElementById("reset-builder-btn");
+  if (resetBtn) {
+    resetBtn.addEventListener("click", resetBuilder);
+  }
 
-showQuestion(); 
+  const speakBtn = document.getElementById("speak-question-btn");
+  if (speakBtn) {
+    speakBtn.addEventListener("click", () => {
+      const q = questions[current];
+      if (q && q.speak) speak(q.speak);
+    });
+  }
+
+  showQuestion();
+};

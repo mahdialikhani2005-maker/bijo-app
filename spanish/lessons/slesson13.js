@@ -1,560 +1,639 @@
+// ============================================================
+//  متغیرهای عمومی
+// ============================================================
 let current = 0;
 let xp = 0;
+let hearts = 5;
+let totalQuestions = 0;
+let isAnswering = false;
 
-function speak(text){
+// ============================================================
+//  دیتابیس سوالات (با ترجمه فارسی)
+// ============================================================
+const questions = [
+  // -------- IMAGE SELECTION --------
+  {
+    type: "image",
+    question: "¿cuál es hoy ?",
+    questionFa: "کدوم یکی امروز هست؟",
+    speak: "hoy",
+    options: [
+      { text: "mañana (mañana)", image: "../../media/time/tomorrow.png" },
+      { text: "hoy", image: "../../media/time/today.png" },
+      { text: "ayer", image: "../../media/time/yesterday.png" },
+      { text: "mañana (día)", image: "../../media/time/morning.png" }
+    ],
+    answer: "hoy"
+  },
+  {
+    type: "image",
+    question: "¿cuál es mañana (futuro) ?",
+    questionFa: "کدوم یکی فردا هست؟",
+    speak: "mañana",
+    options: [
+      { text: "noche", image: "../../media/time/night.png" },
+      { text: "mañana (futuro)", image: "../../media/time/tomorrow.png" },
+      { text: "hoy", image: "../../media/time/today.png" },
+      { text: "ayer", image: "../../media/time/yesterday.png" }
+    ],
+    answer: "mañana (futuro)"
+  },
+  {
+    type: "image",
+    question: "¿cuál es ayer ?",
+    questionFa: "کدوم یکی دیروز هست؟",
+    speak: "ayer",
+    options: [
+      { text: "hoy", image: "../../media/time/today.png" },
+      { text: "ayer", image: "../../media/time/yesterday.png" },
+      { text: "noche", image: "../../media/time/night.png" },
+      { text: "mañana (futuro)", image: "../../media/time/tomorrow.png" }
+    ],
+    answer: "ayer"
+  },
+  {
+    type: "image",
+    question: "¿cuál es mañana (parte del día) ?",
+    questionFa: "کدوم یکی صبح هست؟",
+    speak: "mañana",
+    options: [
+      { text: "ayer", image: "../../media/time/yesterday.png" },
+      { text: "mañana (futuro)", image: "../../media/time/tomorrow.png" },
+      { text: "mañana (día)", image: "../../media/time/morning.png" },
+      { text: "hoy", image: "../../media/time/today.png" }
+    ],
+    answer: "mañana (día)"
+  },
+  {
+    type: "image",
+    question: "¿cuál es noche ?",
+    questionFa: "کدوم یکی شب هست؟",
+    speak: "noche",
+    options: [
+      { text: "mañana (día)", image: "../../media/time/morning.png" },
+      { text: "hoy", image: "../../media/time/today.png" },
+      { text: "mañana (futuro)", image: "../../media/time/tomorrow.png" },
+      { text: "noche", image: "../../media/time/night.png" }
+    ],
+    answer: "noche"
+  },
+
+  // -------- WORD FROM IMAGE --------
+  {
+    type: "word",
+    question: "¿Qué es esta imagen?",
+    questionFa: "این عکس چیه؟",
+    image: "../../media/time/today.png",
+    options: ["mañana (futuro)", "hoy", "ayer", "mañana (día)"],
+    answer: "hoy"
+  },
+  {
+    type: "word",
+    question: "¿Qué es esta imagen?",
+    questionFa: "این عکس چیه؟",
+    image: "../../media/time/tomorrow.png",
+    options: ["noche", "mañana (futuro)", "hoy", "ayer"],
+    answer: "mañana (futuro)"
+  },
+  {
+    type: "word",
+    question: "¿Qué es esta imagen?",
+    questionFa: "این عکس چیه؟",
+    image: "../../media/time/yesterday.png",
+    options: ["hoy", "ayer", "noche", "mañana (futuro)"],
+    answer: "ayer"
+  },
+  {
+    type: "word",
+    question: "¿Qué es esta imagen?",
+    questionFa: "این عکس چیه؟",
+    image: "../../media/time/morning.png",
+    options: ["ayer", "mañana (futuro)", "mañana (día)", "hoy"],
+    answer: "mañana (día)"
+  },
+  {
+    type: "word",
+    question: "¿Qué es esta imagen?",
+    questionFa: "این عکس چیه؟",
+    image: "../../media/time/night.png",
+    options: ["mañana (día)", "hoy", "mañana (futuro)", "noche"],
+    answer: "noche"
+  },
+
+  // -------- AUDIO --------
+  {
+    type: "audio",
+    speak: "hoy",
+    question: "¿Qué palabra escuchaste?",
+    questionFa: "کدوم کلمه رو شنیدی؟",
+    options: ["mañana (futuro)", "hoy", "ayer", "mañana (día)"],
+    answer: "hoy"
+  },
+  {
+    type: "audio",
+    speak: "mañana (futuro)",
+    question: "¿Qué palabra escuchaste?",
+    questionFa: "کدوم کلمه رو شنیدی؟",
+    options: ["noche", "mañana (futuro)", "hoy", "ayer"],
+    answer: "mañana (futuro)"
+  },
+  {
+    type: "audio",
+    speak: "ayer",
+    question: "¿Qué palabra escuchaste?",
+    questionFa: "کدوم کلمه رو شنیدی؟",
+    options: ["hoy", "ayer", "noche", "mañana (futuro)"],
+    answer: "ayer"
+  },
+  {
+    type: "audio",
+    speak: "mañana (día)",
+    question: "¿Qué palabra escuchaste?",
+    questionFa: "کدوم کلمه رو شنیدی؟",
+    options: ["ayer", "mañana (futuro)", "mañana (día)", "hoy"],
+    answer: "mañana (día)"
+  },
+  {
+    type: "audio",
+    speak: "noche",
+    question: "¿Qué palabra escuchaste?",
+    questionFa: "کدوم کلمه رو شنیدی؟",
+    options: ["mañana (día)", "hoy", "mañana (futuro)", "noche"],
+    answer: "noche"
+  },
+
+  // -------- BUILD ES (ساختن جمله اسپانیایی) --------
+  {
+    type: "build-es",
+    speak: "Hoy es lunes",
+    question: "Construya la frase en español:",
+    questionFa: "جمله اسپانیایی رو بساز:",
+    text: "امروز دوشنبه است",
+    words: ["es", "hoy", "lunes"],
+    answer: ["Hoy", "es", "lunes"]
+  },
+  {
+    type: "build-es",
+    speak: "Mañana es martes",
+    question: "Construya la frase en español:",
+    questionFa: "جمله اسپانیایی رو بساز:",
+    text: "فردا سه‌شنبه است",
+    words: ["Mañana (futuro)", "es", "martes"],
+    answer: ["Mañana (futuro)", "es", "martes"]
+  },
+  {
+    type: "build-es",
+    speak: "Ayer fue domingo",
+    question: "Construya la frase en español:",
+    questionFa: "جمله اسپانیایی رو بساز:",
+    text: "دیروز یک‌شنبه بود",
+    words: ["fue", "Ayer", "domingo"],
+    answer: ["Ayer", "fue", "domingo"]
+  },
+  {
+    type: "build-es",
+    speak: "Buenos días",
+    question: "Construya la frase en español:",
+    questionFa: "جمله اسپانیایی رو بساز:",
+    text: "صبح بخیر",
+    words: ["Buenos", "días"],
+    answer: ["Buenos", "días"]
+  },
+  {
+    type: "build-es",
+    speak: "Buenas noches",
+    question: "Construya la frase en español:",
+    questionFa: "جمله اسپانیایی رو بساز:",
+    text: "شب بخیر",
+    words: ["Buenas", "noches"],
+    answer: ["Buenas", "noches"]
+  },
+
+  // -------- BUILD FA (ساختن جمله فارسی) --------
+  {
+    type: "build-fa",
+    speak: "Hoy es lunes",
+    question: "ترجمه را بساز:",
+    questionFa: "ترجمه فارسی رو بساز:",
+    text: "Hoy es lunes",
+    words: ["است", "دوشنبه", "امروز"],
+    answer: ["امروز", "دوشنبه", "است"]
+  },
+  {
+    type: "build-fa",
+    speak: "Mañana es martes",
+    question: "ترجمه را بساز:",
+    questionFa: "ترجمه فارسی رو بساز:",
+    text: "Mañana es martes",
+    words: ["است", "سه‌شنبه", "فردا"],
+    answer: ["فردا", "سه‌شنبه", "است"]
+  },
+  {
+    type: "build-fa",
+    speak: "Ayer fue domingo",
+    question: "ترجمه را بساز:",
+    questionFa: "ترجمه فارسی رو بساز:",
+    text: "Ayer fue domingo",
+    words: ["بود", "یک‌شنبه", "دیروز"],
+    answer: ["دیروز", "یک‌شنبه", "بود"]
+  },
+  {
+    type: "build-fa",
+    speak: "Buenos días",
+    question: "ترجمه را بساز:",
+    questionFa: "ترجمه فارسی رو بساز:",
+    text: "Buenos días",
+    words: ["بخیر", "صبح"],
+    answer: ["صبح", "بخیر"]
+  },
+  {
+    type: "build-fa",
+    speak: "Buenas noches",
+    question: "ترجمه را بساز:",
+    questionFa: "ترجمه فارسی رو بساز:",
+    text: "Buenas noches",
+    words: ["بخیر", "شب"],
+    answer: ["شب", "بخیر"]
+  }
+];
+
+// ============================================================
+//  توابع کمکی
+// ============================================================
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function speak(text) {
   if (!window.speechSynthesis) return;
-
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = "es-ES";
   utter.rate = 0.9;
-
   speechSynthesis.cancel();
   speechSynthesis.speak(utter);
 }
 
-window.onload = function() {
-  if (typeof checkAndRegenHearts === 'function') {
-  checkAndRegenHearts();
+// ============================================================
+//  توابع ارتباط با dataStorage.js
+// ============================================================
+function updateUIStats() {
+  if (typeof getHearts === "function") {
+    hearts = getHearts();
+  }
+  const heartEl = document.getElementById("heart-count");
+  const xpEl = document.getElementById("xp-display");
+  if (heartEl) heartEl.textContent = hearts;
+  if (xpEl) xpEl.textContent = typeof getTotalXP === "function" ? getTotalXP() : xp;
 }
 
-    if (typeof getHearts === 'function') {
-        const currentHearts = getHearts();
-        const heartElement = document.getElementById("heart-count");
-        if (heartElement) {
-            heartElement.textContent = currentHearts;
-        }
-        
-        // اگر قلب کاربر 0 بود، اجازه شروع درس را نده (اختیاری)
-        if (currentHearts <= 0) {
-            alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
-            window.location.href = "../home.html";
-        }
-    }
-};
-
-const questions = [
-
-/* IMAGE */
-
-{
-type:"image",
-question:"¿cuál es hoy ?",
-speak:"hoy",
-options:[
-{text:"mañana",image:"../../media/time/tomorrow.png"},
-{text:"hoy",image:"../../media/time/today.png"},
-{text:"ayer",image:"../../media/time/yesterday.png"},
-{text:"mañana",image:"../../media/time/morning.png"}
-],
-answer:"hoy"
-},
-
-{
-type:"image",
-question:"¿cuál es mañana ?",
-speak:"mañana",
-options:[
-{text:"noche",image:"../../media/time/night.png"},
-{text:"mañana",image:"../../media/time/tomorrow.png"},
-{text:"hoy",image:"../../media/time/today.png"},
-{text:"ayer",image:"../../media/time/yesterday.png"}
-],
-answer:"mañana"
-},
-
-{
-type:"image",
-question:"¿cuál es ayer ?",
-speak:"ayer",
-options:[
-{text:"hoy",image:"../../media/time/today.png"},
-{text:"ayer",image:"../../media/time/yesterday.png"},
-{text:"noche",image:"../../media/time/night.png"},
-{text:"mañana",image:"../../media/time/tomorrow.png"}
-],
-answer:"ayer"
-},
-
-{
-type:"image",
-question:"¿cuál es mañana (parte del día) ?",
-speak:"mañana",
-options:[
-{text:"ayer",image:"../../media/time/yesterday.png"},
-{text:"mañana",image:"../../media/time/tomorrow.png"},
-{text:"mañana",image:"../../media/time/morning.png"},
-{text:"hoy",image:"../../media/time/today.png"}
-],
-answer:"mañana"
-},
-
-{
-type:"image",
-question:"¿cuál es noche ?",
-speak:"noche",
-options:[
-{text:"mañana",image:"../../media/time/morning.png"},
-{text:"hoy",image:"../../media/time/today.png"},
-{text:"mañana",image:"../../media/time/tomorrow.png"},
-{text:"noche",image:"../../media/time/night.png"}
-],
-answer:"noche"
-},
-
-/* WORD */
-
-{
-type:"word",
-question:"¿Qué es esta imagen?",
-image:"../../media/time/today.png",
-options:["mañana","hoy","ayer","mañana"],
-answer:"hoy"
-},
-
-{
-type:"word",
-question:"¿Qué es esta imagen?",
-image:"../../media/time/tomorrow.png",
-options:["noche","mañana","hoy","ayer"],
-answer:"mañana"
-},
-
-{
-type:"word",
-question:"¿Qué es esta imagen?",
-image:"../../media/time/yesterday.png",
-options:["hoy","ayer","noche","mañana"],
-answer:"ayer"
-},
-
-{
-type:"word",
-question:"¿Qué es esta imagen?",
-image:"../../media/time/morning.png",
-options:["ayer","mañana","mañana","hoy"],
-answer:"mañana"
-},
-
-{
-type:"word",
-question:"¿Qué es esta imagen?",
-image:"../../media/time/night.png",
-options:["mañana","hoy","mañana","noche"],
-answer:"noche"
-},
-
-/* AUDIO */
-
-{
-type:"audio",
-speak:"hoy",
-question:"¿Qué palabra escuchaste?",
-options:["mañana","hoy","ayer","mañana"],
-answer:"hoy"
-},
-
-{
-type:"audio",
-speak:"mañana",
-question:"¿Qué palabra escuchaste?",
-options:["noche","mañana","hoy","ayer"],
-answer:"mañana"
-},
-
-{
-type:"audio",
-speak:"ayer",
-question:"¿Qué palabra escuchaste?",
-options:["hoy","ayer","noche","mañana"],
-answer:"ayer"
-},
-
-{
-type:"audio",
-speak:"mañana",
-question:"¿Qué palabra escuchaste?",
-options:["ayer","mañana","mañana","hoy"],
-answer:"mañana"
-},
-
-{
-type:"audio",
-speak:"noche",
-question:"¿Qué palabra escuchaste?",
-options:["mañana","hoy","mañana","noche"],
-answer:"noche"
-},
-
-/* BUILD ES */
-
-{
-type:"build-es",
-speak:"Hoy es lunes",
-question:"Construya la frase en español:",
-text:"امروز دوشنبه است",
-words:["es","hoy","lunes"],
-answer:["Hoy","es","lunes"]
-},
-
-{
-type:"build-es",
-speak:"Mañana es martes",
-question:"Construya la frase en español:",
-text:"فردا سه‌شنبه است",
-words:["Mañana","es","martes"],
-answer:["Mañana","es","martes"]
-},
-
-{
-type:"build-es",
-speak:"Ayer fue domingo",
-question:"Construya la frase en español:",
-text:"دیروز یک‌شنبه بود",
-words:["fue","Ayer","domingo"],
-answer:["Ayer","fue","domingo"]
-},
-
-{
-type:"build-es",
-speak:"Buenos días",
-question:"Construya la frase en español:",
-text:"صبح بخیر",
-words:["Buenos","días"],
-answer:["Buenos","días"]
-},
-
-{
-type:"build-es",
-speak:"Buenas noches",
-question:"Construya la frase en español:",
-text:"شب بخیر",
-words:["Buenas","noches"],
-answer:["Buenas","noches"]
-},
-
-/* BUILD FA */
-
-{
-type:"build-fa",
-speak:"Hoy es lunes",
-question:"ترجمه را بساز:",
-text:"Hoy es lunes",
-words:["است","دوشنبه","امروز"],
-answer:["امروز","دوشنبه","است"]
-},
-
-{
-type:"build-fa",
-speak:"Mañana es martes",
-question:"ترجمه را بساز:",
-text:"Mañana es martes",
-words:["است","سه‌شنبه","فردا"],
-answer:["فردا","سه‌شنبه","است"]
-},
-
-{
-type:"build-fa",
-speak:"Ayer fue domingo",
-question:"ترجمه را بساز:",
-text:"Ayer fue domingo",
-words:["بود","یک‌شنبه","دیروز"],
-answer:["دیروز","یک‌شنبه","بود"]
-},
-
-{
-type:"build-fa",
-speak:"Buenos días",
-question:"ترجمه را بساز:",
-text:"Buenos días",
-words:["بخیر","صبح"],
-answer:["صبح","بخیر"]
-},
-
-{
-type:"build-fa",
-speak:"Buenas noches",
-question:"ترجمه را بساز:",
-text:"Buenas noches",
-words:["بخیر","شب"],
-answer:["شب","بخیر"]
+async function handleCorrectAnswer() {
+  xp += 5;
+  if (typeof addXP === "function") {
+    await addXP(5);
+  }
+  updateUIStats();
 }
 
-];
+async function handleWrongAnswer() {
+  if (typeof loseHeart === "function") {
+    await loseHeart();
+  }
+  if (typeof checkAndRegenHearts === "function") {
+    checkAndRegenHearts();
+  }
+  updateUIStats();
 
+  if (hearts <= 0) {
+    document.getElementById("app").innerHTML = `
+      <div style="text-align:center; padding:40px 20px;">
+        <h2 style="color:#e74c3c;">💔 قلبتان تمام شد!</h2>
+        <p style="color:#4a5a7a;">لطفاً کمی صبر کنید تا قلب‌ها بازیابی شوند.</p>
+        <a href="../index.html" style="display:inline-block; margin-top:20px; background:#4a6cf7; color:#fff; padding:12px 32px; border-radius:60px; text-decoration:none;">بازگشت به خانه</a>
+      </div>
+    `;
+    return true;
+  }
+  return false;
+}
 
-// =====================================
-// نمایش سوال
-// =====================================
-    // اضافه کردن XP کسب شده به دیتابیس پروفایل در پایان درس
+// ============================================================
+//  نمایش پیام بازخورد
+// ============================================================
+function showFeedback(text, type) {
+  const el = document.getElementById("feedback-message");
+  if (!el) return;
+  el.textContent = text;
+  el.className = "feedback-message show " + type;
+  clearTimeout(el._timeout);
+  el._timeout = setTimeout(() => {
+    el.className = "feedback-message";
+  }, 800);
+}
 
-
-    function showQuestion() {
+// ============================================================
+//  نمایش سوال
+// ============================================================
+function showQuestion() {
   if (current >= questions.length) {
     const finalXP = typeof getTotalXP === "function" ? getTotalXP() : xp;
-
     document.getElementById("app").innerHTML = `
-      <h2>درس تمام شد 🎉</h2>
-      <p>XP دریافت‌شده: <b>${finalXP}</b></p>
-      <a href="../index.html">بازگشت</a>
+      <div style="text-align:center; padding:40px 20px;">
+        <h2 style="color:#2ecc71;">🎉 درس تمام شد!</h2>
+        <p style="color:#1e2a41; font-size:1.2rem;">امتیاز کسب‌شده: <b>${finalXP}</b> XP</p>
+        <a href="../index.html" style="display:inline-block; margin-top:24px; background:#4a6cf7; color:#fff; padding:14px 44px; border-radius:60px; text-decoration:none;">بازگشت به خانه</a>
+      </div>
     `;
+    document.getElementById("progress-bar").style.width = "100%";
+    const footer = document.getElementById("lesson-footer");
+    if (footer) footer.style.display = "none";
     return;
   }
 
-
   const q = questions[current];
+  totalQuestions = questions.length;
+  
+  const currentNumEl = document.getElementById("current-q-num");
+  const totalNumEl = document.getElementById("total-q-count");
+  const progressBar = document.getElementById("progress-bar");
+  
+  if (currentNumEl) currentNumEl.textContent = current + 1;
+  if (totalNumEl) totalNumEl.textContent = totalQuestions;
+  if (progressBar) progressBar.style.width = ((current / totalQuestions) * 100) + "%";
+
+  // پخش صدا
   if (q.speak) {
-  setTimeout(() => {
-    speak(q.speak);
-  }, 200);
-}
+    setTimeout(() => speak(q.speak), 300);
+  }
 
   const title = document.getElementById("question-title");
   const content = document.getElementById("question-content");
   const optionsBox = document.getElementById("options");
   const wordBuilder = document.getElementById("word-builder");
 
-  title.innerText = q.question;
-  content.innerHTML = "";
-  optionsBox.innerHTML = "";
-  wordBuilder.innerHTML = "";
-wordBuilder.classList.add("hidden");
-
-  // IMAGE SELECTION
-  // IMAGE SELECTION
-if (q.type === "image") {
-  optionsBox.classList.add("image-grid");
-
- shuffleArray(q.options).forEach(opt => {
-
-    let btn = document.createElement("button");
-    btn.className = "option image-option";
-    btn.innerHTML = `
-      <img src="${opt.image}" alt="${opt.text}">
+  // نمایش سوال با ترجمه فارسی
+  if (title) {
+    title.innerHTML = `
+      ${q.question}
+      <span style="display:block; font-size:0.9rem; font-weight:400; color:#7c8ba0; margin-top:4px;">
+        ${q.questionFa || ''}
+      </span>
     `;
-    btn.onclick = () => select(opt.text);
-    optionsBox.appendChild(btn);
-  });
+  }
+
+  if (content) content.innerHTML = "";
+  if (optionsBox) optionsBox.innerHTML = "";
+  if (wordBuilder) {
+    wordBuilder.innerHTML = "";
+    wordBuilder.classList.add("hidden");
+  }
+  
+  const resetBtn = document.getElementById("reset-builder-btn");
+  if (resetBtn) resetBtn.style.display = "none";
+  
+  isAnswering = false;
+
+  // ----- نوع سوال -----
+  if (q.type === "image") {
+    if (optionsBox) optionsBox.className = "options-container image-grid";
+    shuffleArray(q.options).forEach(opt => {
+      const btn = document.createElement("button");
+      btn.className = "option image-option";
+      btn.innerHTML = `<img src="${opt.image}" alt="${opt.text}" />`;
+      btn.dataset.value = opt.text;
+      btn.onclick = () => handleOptionClick(btn, q.answer);
+      if (optionsBox) optionsBox.appendChild(btn);
+    });
+  } 
+  else if (q.type === "word") {
+    if (content) content.innerHTML = `<img src="${q.image}" alt="word" />`;
+    if (optionsBox) optionsBox.className = "options-container";
+    shuffleArray(q.options).forEach(opt => {
+      const btn = document.createElement("button");
+      btn.className = "option";
+      btn.innerText = opt;
+      btn.dataset.value = opt;
+      btn.onclick = () => handleOptionClick(btn, q.answer);
+      if (optionsBox) optionsBox.appendChild(btn);
+    });
+  } 
+  else if (q.type === "audio") {
+    if (content) {
+      content.innerHTML = `<button class="audio-btn" onclick="speak('${q.speak}')">🔊 پخش صدا</button>`;
+    }
+    if (optionsBox) optionsBox.className = "options-container";
+    shuffleArray(q.options).forEach(opt => {
+      const btn = document.createElement("button");
+      btn.className = "option";
+      btn.innerText = opt;
+      btn.dataset.value = opt;
+      btn.onclick = () => handleOptionClick(btn, q.answer);
+      if (optionsBox) optionsBox.appendChild(btn);
+    });
+  } 
+  else if (q.type === "build-es" || q.type === "build-fa") {
+    if (content) {
+      content.innerHTML = `<p style="font-size:1.2rem; font-weight:500; color:#1e2a41;">${q.text}</p>`;
+    }
+    if (wordBuilder) {
+      wordBuilder.classList.remove("hidden");
+    }
+    if (resetBtn) resetBtn.style.display = "inline-block";
+
+    if (wordBuilder) {
+      wordBuilder.classList.remove("ltr", "rtl");
+      if (q.type === "build-es") {
+        wordBuilder.classList.add("ltr");
+      } else {
+        wordBuilder.classList.add("rtl");
+      }
+    }
+    
+    if (optionsBox) {
+      optionsBox.classList.remove("ltr", "rtl");
+      if (q.type === "build-es") {
+        optionsBox.classList.add("ltr");
+      } else {
+        optionsBox.classList.add("rtl");
+      }
+    }
+
+    shuffleArray(q.words).forEach(w => {
+      const tile = document.createElement("span");
+      tile.className = "tile";
+      tile.innerText = w;
+      tile.dataset.word = w;
+      tile.onclick = () => handleTileClick(tile, q);
+      if (optionsBox) optionsBox.appendChild(tile);
+    });
+  }
 }
 
+// ============================================================
+//  کلیک روی گزینه‌ها
+// ============================================================
+async function handleOptionClick(btn, correctAnswer) {
+  if (isAnswering) return;
+  isAnswering = true;
 
-  // WORD FROM IMAGE
-  if (q.type === "word") {
-    content.innerHTML = `<img src="${q.image}">`;
-shuffleArray(q.options).forEach(opt => {
+  const selected = btn.dataset.value;
+  const isCorrect = String(selected).trim().toLowerCase() === String(correctAnswer).trim().toLowerCase();
 
-      let b = document.createElement("button");
-      b.className = "option";
-      b.innerText = opt;
-      b.onclick = () => select(opt);
-      optionsBox.appendChild(b);
+  document.querySelectorAll(".option").forEach(b => b.classList.add("disabled"));
+
+  if (isCorrect) {
+    btn.classList.add("correct");
+    showFeedback("✅ عالی!", "correct");
+    await handleCorrectAnswer();
+    setTimeout(() => {
+      current++;
+      showQuestion();
+    }, 700);
+  } else {
+    btn.classList.add("wrong");
+    document.querySelectorAll(".option").forEach(b => {
+      if (String(b.dataset.value).trim().toLowerCase() === String(correctAnswer).trim().toLowerCase()) {
+        b.classList.add("correct");
+      }
     });
+    showFeedback("❌ دوباره تلاش کن", "wrong");
+    const stopped = await handleWrongAnswer();
+    if (!stopped) {
+      setTimeout(() => {
+        document.querySelectorAll(".option").forEach(b => {
+          b.classList.remove("wrong", "correct", "disabled");
+        });
+        isAnswering = false;
+      }, 1000);
+    } else {
+      isAnswering = true;
+    }
   }
+}
 
-  // AUDIO
-  if (q.type === "audio") {
-    content.innerHTML = `<button class="audio-btn" onclick="speak('${q.speak}')">🔊 پخش</button>`;
-
-shuffleArray(q.options).forEach(opt => {
-      let b = document.createElement("button");
-      b.className = "option";
-      b.innerText = opt;
-      b.onclick = () => select(opt);
-      optionsBox.appendChild(b);
-    });
-  }
-
-  // BUILD ENGLISH
-    // BUILD ENGLISH / FA
-
-  else if (q.type === "build-en" || q.type === "build-fa") {
-  content.innerHTML = `<p>${q.text}</p>`;
-
+// ============================================================
+//  کلیک روی کاشی‌های builder
+// ============================================================
+function handleTileClick(tile, q) {
+  if (isAnswering) return;
   const wordBuilder = document.getElementById("word-builder");
   const optionsBox = document.getElementById("options");
-  if (!wordBuilder || !optionsBox) return;
 
-  // پاک کردن محتوای قبلی
-  wordBuilder.innerHTML = "";
-  optionsBox.innerHTML = "";
- wordBuilder.classList.remove("hidden");
-  // تنظیم جهت
-  wordBuilder.classList.remove("ltr", "rtl");
-  optionsBox.classList.remove("ltr", "rtl");
-
-  if (q.type === "build-en") {
-    wordBuilder.classList.add("ltr");
-    optionsBox.classList.add("ltr");
-  } else {
-    wordBuilder.classList.add("rtl");
-    optionsBox.classList.add("rtl");
-  }
-
-shuffleArray(q.words).forEach(w => {
-
-    const tile = document.createElement("span");
-    tile.className = "tile";
-    tile.innerText = w;
-    tile.dataset.word = w;
-
-    // کلیک اول: انتقال از options به word-builder
-    tile.onclick = () => {
-  // اگر کارت در گزینه‌هاست → بفرستش داخل builder
   if (tile.parentNode === optionsBox) {
     wordBuilder.appendChild(tile);
-
-  // اگر کارت داخل builder بود → برگردونش به گزینه‌ها
   } else if (tile.parentNode === wordBuilder) {
     optionsBox.appendChild(tile);
   }
 
-  // بررسی کامل بودن جواب
   const userWords = [...wordBuilder.children].map(el => el.dataset.word);
   if (userWords.length === q.answer.length) {
     checkBuild(userWords, q.answer);
   }
-};
-
-
-    optionsBox.appendChild(tile);
-  });
 }
 
+// ============================================================
+//  بررسی جواب builder
+// ============================================================
 async function checkBuild(selected, correct) {
+  if (isAnswering) return;
+  isAnswering = true;
+
   const s = selected.map(w => w.trim().toLowerCase());
   const c = correct.map(w => w.trim().toLowerCase());
+  const isCorrect = JSON.stringify(s) === JSON.stringify(c);
 
-  if (JSON.stringify(s) === JSON.stringify(c)) {
-    xp += 5;
+  document.querySelectorAll(".tile").forEach(t => t.style.pointerEvents = "none");
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
-
-    current++;
-    showQuestion();
+  if (isCorrect) {
+    showFeedback("✅ عالی!", "correct");
+    await handleCorrectAnswer();
+    setTimeout(() => {
+      current++;
+      showQuestion();
+    }, 700);
   } else {
-    alert("اشتباه بود! دوباره تلاش کن.");
-
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
-
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
-
-    if (typeof getHearts === "function" && getHearts() <= 0) {
-      document.getElementById("app").innerHTML = `
-        <h2>قلب شما تمام شد 💔</h2>
-        <p>برای ادامه باید صبر کنید تا قلب‌ها برگردند.</p>
-        <a href="../home.html">بازگشت</a>
-      `;
-      return;
+    showFeedback("❌ دوباره تلاش کن", "wrong");
+    const stopped = await handleWrongAnswer();
+    if (!stopped) {
+      setTimeout(() => {
+        resetBuilder();
+        document.querySelectorAll(".tile").forEach(t => t.style.pointerEvents = "");
+        isAnswering = false;
+      }, 1000);
+    } else {
+      isAnswering = true;
     }
   }
 }
 
-
-async function select(ans) {
-  const correct = questions[current].answer;
-
-  if (String(ans).trim().toLowerCase() === String(correct).trim().toLowerCase()) {
-    xp += 5;
-
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
-
-    current++;
-    showQuestion();
-  } else {
-    alert("اشتباه بود! دوباره تلاش کن.");
-
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
-
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
-
-    if (typeof getHearts === "function" && getHearts() <= 0) {
-      document.getElementById("app").innerHTML = `
-        <h2>قلب شما تمام شد 💔</h2>
-        <p>برای ادامه باید صبر کنید تا قلب‌ها برگردند.</p>
-        <a href="../home.html">بازگشت</a>
-      `;
-      return;
-    }
-  }
-}
-
-
-
-  // اگر بعداً آرایه‌ی selected هم ساختی، اینجا باید از آن هم حذف شود
-}
-function removeLastBuilderItem() {
+// ============================================================
+//  دکمه پاک کردن builder
+// ============================================================
+function resetBuilder() {
   const wordBuilder = document.getElementById("word-builder");
   const optionsBox = document.getElementById("options");
-
   if (!wordBuilder || !optionsBox) return;
-  if (wordBuilder.children.length === 0) return;
-
-  const lastItem = wordBuilder.lastElementChild;
-  if (lastItem) {
-    optionsBox.prepend(lastItem);
+  while (wordBuilder.children.length > 0) {
+    const tile = wordBuilder.firstElementChild;
+    optionsBox.appendChild(tile);
   }
 }
 
-// Word Builder Keyboard Control
-
-document.addEventListener("keydown", function (e) {
+// ============================================================
+//  رویدادهای کلید
+// ============================================================
+document.addEventListener("keydown", function(e) {
   const wordBuilder = document.getElementById("word-builder");
-  if (!wordBuilder) return;
-
-  //if (document.activeElement !== wordBuilder) return;
-
+  if (!wordBuilder || wordBuilder.classList.contains("hidden")) return;
   if (e.key === "Backspace") {
     e.preventDefault();
-    removeLastBuilderItem();
+    const last = wordBuilder.lastElementChild;
+    if (last) {
+      document.getElementById("options").appendChild(last);
+    }
   }
 });
 
-function returnTileToOptions(tile) {
-  const optionsBox = document.getElementById("options");
-  if (!optionsBox || !tile) return;
-
-  optionsBox.appendChild(tile);
-  tile.classList.remove("selected");
-
-  if (tile.returnFunction) {
-    tile.removeEventListener("click", tile.returnFunction);
-    delete tile.returnFunction;
+// ============================================================
+//  بارگذاری اولیه
+// ============================================================
+window.onload = function() {
+  if (typeof checkAndRegenHearts === "function") {
+    checkAndRegenHearts();
   }
-}
+  updateUIStats();
 
-
-function shuffleArray(arr) {
-  let array = [...arr];
-
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-
-    [array[i], array[j]] = [array[j], array[i]];
+  if (hearts <= 0) {
+    alert("💔 قلب شما تمام شده! لطفاً کمی صبر کنید.");
+    window.location.href = "../index.html";
+    return;
   }
 
-  return array;
-}
+  const backBtn = document.getElementById("back-to-intro");
+  if (backBtn) {
+    backBtn.addEventListener("click", () => {
+      const params = new URLSearchParams(window.location.search);
+      const lesson = params.get("lesson") || "es-lesson13";
+      window.location.href = `intro.html?lesson=${lesson}`;
+    });
+  }
 
+  const resetBtn = document.getElementById("reset-builder-btn");
+  if (resetBtn) {
+    resetBtn.addEventListener("click", resetBuilder);
+  }
 
-showQuestion(); 
+  const speakBtn = document.getElementById("speak-question-btn");
+  if (speakBtn) {
+    speakBtn.addEventListener("click", () => {
+      const q = questions[current];
+      if (q && q.speak) speak(q.speak);
+    });
+  }
+
+  showQuestion();
+};
