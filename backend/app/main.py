@@ -2,80 +2,86 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from app.database import engine, Base
+import os
 
-# Import models
-from app.models import user, heart, progress, premium, subscription
-
-# Import routes
-from app.routes import user as user_routes
-from app.routes import auth
-from app.routes import progress as progress_routes
-from app.routes import heart as heart_routes
-from app.routes import premium as premium_routes
-
-# ساخت جداول دیتابیس
-Base.metadata.create_all(bind=engine)
-
+# ----------------------------------------------
+# ساخت اپلیکیشن FastAPI
+# ----------------------------------------------
 app = FastAPI(
-    title="Language Learning App API",
-    debug=True
+    title="Bijo Language App API",
+    description="API for Bijo language learning app",
+    version="1.0.0",
+    debug=False  # در تولید (production) دیباگ باید خاموش باشد
 )
 
-# تنظیم CORS برای اتصال فرانت‌اند
+# ----------------------------------------------
+# تنظیمات CORS برای اتصال فرانت‌اند
+# ----------------------------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # در تولید، بهتر است دامنه خاص را بگذارید
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# -------------------------
-# Routes
-# -------------------------
+# ----------------------------------------------
+# مسیرهای API
+# ----------------------------------------------
 
-# احراز هویت
-app.include_router(auth.router, prefix="/api")
+# یک مسیر ساده برای سلام (جهت تست)
+@app.get("/api/hello")
+async def hello():
+    return {"message": "Hello from Bijo API!"}
 
-# کاربران
-app.include_router(user_routes.router, prefix="/api")
+# مسیر سلامت (Health Check) برای Render
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "service": "bijo-backend"}
 
-# پیشرفت
-app.include_router(progress_routes.router, prefix="/api/progress")
+# ----------------------------------------------
+# سرویس‌دهی فایل‌های استاتیک (HTML, CSS, JS)
+# ----------------------------------------------
 
-# قلب‌ها
-app.include_router(heart_routes.router, prefix="/api/hearts")
+# مسیر پوشه اصلی پروژه (ریشه)
+# توجه: این مسیر بر اساس جایی که فایل main.py اجرا می‌شود، تنظیم می‌شود
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # مسیر پوشه app
+ROOT_DIR = os.path.dirname(BASE_DIR)  # مسیر پوشه backend
+PROJECT_ROOT = os.path.dirname(ROOT_DIR)  # مسیر ریشه پروژه (جایی که home.html هست)
 
-# پریمیوم
-app.include_router(premium_routes.router, prefix="/api/premium")
+# سرویس فایل‌های استاتیک (اگر پوشه‌ای برای آنها دارید)
+# app.mount("/static", StaticFiles(directory=os.path.join(PROJECT_ROOT, "static")), name="static")
 
-# -------------------------
-# Static Files (همه فایل‌های استاتیک مثل CSS, JS, HTML)
-# -------------------------
-app.mount("/static", StaticFiles(directory="/root/myapp"), name="static")
+# ----------------------------------------------
+# سرویس صفحات HTML
+# ----------------------------------------------
 
-# -------------------------
-# صفحه اصلی (home.html)
-# -------------------------
 @app.get("/")
 async def serve_home():
-    return FileResponse("/root/myapp/home.html")
+    """سرویس صفحه اصلی (home.html)"""
+    home_path = os.path.join(PROJECT_ROOT, "home.html")
+    if os.path.exists(home_path):
+        return FileResponse(home_path)
+    return {"error": "home.html not found"}
 
-# -------------------------
-# سرو کردن سایر فایل‌های HTML
-# -------------------------
-@app.get("/{file_name}")
+@app.get("/{file_name:path}")
 async def serve_html(file_name: str):
-    import os
-    file_path = f"/root/myapp/{file_name}"
-    if os.path.exists(file_path) and file_name.endswith(".html"):
-        return FileResponse(file_path)
-    return {"detail": "Not Found"}
+    """سرویس تمام فایل‌های HTML و فایل‌های دیگر"""
+    # جلوگیری از دسترسی به فایل‌های حساس
+    if file_name.startswith(".") or ".." in file_name:
+        return {"error": "Access denied"}
 
-# -------------------------
-# Health Check
-# -------------------------
-@app.get("/health")
-def health():
-    return {"status": "ok"}
+    file_path = os.path.join(PROJECT_ROOT, file_name)
+    
+    # اگر فایل وجود دارد و HTML است یا فایل استاتیک (CSS, JS, ...)
+    if os.path.exists(file_path) and not os.path.isdir(file_path):
+        return FileResponse(file_path)
+    
+    return {"error": "File not found"}
+
+# ----------------------------------------------
+# اجرا (برای اجرای مستقیم با python main.py)
+# ----------------------------------------------
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
