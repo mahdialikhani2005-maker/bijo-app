@@ -1,4 +1,6 @@
-const API_URL = "http://127.0.0.1:8000/api";
+// این فایل به‌جای تعریف دوباره‌ی API_URL، از همون متغیری که
+// config.js تعریف کرده استفاده می‌کنه (باید همیشه بعد از config.js لود بشه)
+const API_BASE = `${API_URL}/api`;
 
 let currentUser = null;
 let heartsCache = 5;
@@ -11,9 +13,23 @@ const HEART_REGEN_TIME = 4 * 60 * 60 * 1000; // 4 ساعت
 // ======================
 
 async function apiRequest(url, options = {}) {
-  const res = await fetch(url, options);
+  const token = getToken();
+
+  const headers = {
+    "Content-Type": "application/json",
+    ...(options.headers || {})
+  };
+
+  // اگه توکن داریم و صراحتاً نگفتن بدون توکن بفرست، بفرستش
+  if (token && !options.skipAuth) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(url, { ...options, headers });
+
   let data = {};
   try { data = await res.json(); } catch {}
+
   if (!res.ok) throw new Error(data.detail || "خطای سرور");
   return data;
 }
@@ -30,25 +46,35 @@ function loadUserFromStorage() {
 function saveUser(user) {
   currentUser = user;
   localStorage.setItem("user", JSON.stringify(user));
+
+  // توکنی که سرور بعد از لاگین/ثبت‌نام برمی‌گردونه رو جدا ذخیره می‌کنیم
+  if (user.access_token) {
+    localStorage.setItem("access_token", user.access_token);
+  }
+}
+
+function getToken() {
+  return localStorage.getItem("access_token");
 }
 
 function logoutUser() {
   currentUser = null;
   localStorage.removeItem("user");
+  localStorage.removeItem("access_token");
 }
 
 function getUserId() { return currentUser?.id; }
 function getUserProfile() { return currentUser; }
-function isLoggedIn() { return currentUser != null; }
+function isLoggedIn() { return currentUser != null && !!getToken(); }
 
 // ======================
 // AUTH
 // ======================
 
 async function registerUser(data) {
-  const user = await apiRequest(`${API_URL}/register`, {
+  const user = await apiRequest(`${API_BASE}/register`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    skipAuth: true, // موقع ثبت‌نام هنوز توکنی نداریم
     body: JSON.stringify({
       full_name: data.name || data.full_name,
       username: data.username,
@@ -61,9 +87,9 @@ async function registerUser(data) {
 }
 
 async function loginUser(username, password) {
-  const user = await apiRequest(`${API_URL}/login`, {
+  const user = await apiRequest(`${API_BASE}/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    skipAuth: true,
     body: JSON.stringify({ username, password })
   });
   saveUser(user);
@@ -81,7 +107,7 @@ function isPremium() {
 }
 
 // ======================
-// HEARTS
+// HEARTS (حالا واقعاً از سرور می‌خونه، نه فقط لوکال)
 // ======================
 
 async function fetchHearts() {
@@ -89,7 +115,19 @@ async function fetchHearts() {
     heartsCache = 999;
     return heartsCache;
   }
-  checkAndRegenHearts();
+
+  if (!isLoggedIn()) {
+    heartsCache = 5;
+    return heartsCache;
+  }
+
+  try {
+    const data = await apiRequest(`${API_BASE}/hearts/me`, { method: "GET" });
+    heartsCache = data.heart_count;
+  } catch (err) {
+    console.error("خطا در گرفتن قلب‌ها:", err);
+  }
+
   return heartsCache;
 }
 
@@ -100,74 +138,43 @@ function getHearts() {
 
 async function loseHeart() {
   if (isPremium()) return 999;
-  heartsCache = Math.max(0, heartsCache - 1);
-  localStorage.setItem("hearts", heartsCache);
-  if (!localStorage.getItem("lastHeartLostTime") || heartsCache === 4) {
-    localStorage.setItem("lastHeartLostTime", Date.now());
+
+  if (!isLoggedIn()) {
+    heartsCache = Math.max(0, heartsCache - 1);
+    return heartsCache;
   }
+
+  try {
+    const data = await apiRequest(`${API_BASE}/hearts/decrease`, { method: "POST" });
+    heartsCache = data.remaining;
+  } catch (err) {
+    console.error("خطا در کم کردن قلب:", err);
+  }
+
   return heartsCache;
 }
 
-async function gainHeart() {
-  if (isPremium()) return 999;
-  heartsCache = Math.min(5, heartsCache + 1);
-  localStorage.setItem("hearts", heartsCache);
-  if (heartsCache >= 5) localStorage.removeItem("lastHeartLostTime");
-  return heartsCache;
-}
-
 // ======================
-// HEART REGEN
-// ======================
-
-function checkAndRegenHearts() {
-  if (isPremium()) {
-    heartsCache = 999;
-    return;
-  }
-  const now = Date.now();
-  let hearts = parseInt(localStorage.getItem("hearts") ?? "5");
-
-  if (hearts >= 5) {
-    heartsCache = 5;
-    localStorage.removeItem("lastHeartLostTime");
-    return;
-  }
-
-  const last = parseInt(localStorage.getItem("lastHeartLostTime") || now);
-  const diff = now - last;
-  const healed = Math.floor(diff / HEART_REGEN_TIME);
-
-  if (healed > 0) {
-    hearts = Math.min(5, hearts + healed);
-    localStorage.setItem("hearts", hearts);
-    if (hearts >= 5) {
-      localStorage.removeItem("lastHeartLostTime");
-    } else {
-      localStorage.setItem("lastHeartLostTime", last + healed * HEART_REGEN_TIME);
-    }
-  }
-
-  heartsCache = hearts;
-}
-
-function getTimeUntilNextHeart() {
-  if (isPremium()) return null;
-  const hearts = parseInt(localStorage.getItem("hearts") ?? "5");
-  if (hearts >= 5) return null;
-  const last = parseInt(localStorage.getItem("lastHeartLostTime") || Date.now());
-  const elapsed = Date.now() - last;
-  const remaining = HEART_REGEN_TIME - (elapsed % HEART_REGEN_TIME);
-  return Math.ceil(remaining / 1000);
-}
-
-// ======================
-// XP
+// XP (حالا واقعاً به سرور ارسال میشه)
 // ======================
 
 async function addXP(amount, lesson_slug = "general") {
-  xpCache = parseInt(localStorage.getItem("xp") || "0") + amount;
-  localStorage.setItem("xp", xpCache);
+  if (!isLoggedIn()) {
+    xpCache = parseInt(localStorage.getItem("xp") || "0") + amount;
+    localStorage.setItem("xp", xpCache);
+    return xpCache;
+  }
+
+  try {
+    const data = await apiRequest(`${API_BASE}/progress/xp`, {
+      method: "POST",
+      body: JSON.stringify({ lesson_slug, amount })
+    });
+    xpCache = data.xp;
+  } catch (err) {
+    console.error("خطا در ثبت XP:", err);
+  }
+
   return xpCache;
 }
 
@@ -197,6 +204,7 @@ window.initUserData = initUserData;
 window.registerUser = registerUser;
 window.loginUser = loginUser;
 window.logoutUser = logoutUser;
+window.getToken = getToken;
 
 window.getUserProfile = getUserProfile;
 window.isLoggedIn = isLoggedIn;
@@ -204,9 +212,7 @@ window.isPremium = isPremium;
 
 window.getHearts = getHearts;
 window.loseHeart = loseHeart;
-window.gainHeart = gainHeart;
-window.checkAndRegenHearts = checkAndRegenHearts;
-window.getTimeUntilNextHeart = getTimeUntilNextHeart;
+window.fetchHearts = fetchHearts;
 
 window.addXP = addXP;
 window.getTotalXP = getTotalXP;

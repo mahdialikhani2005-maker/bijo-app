@@ -2,17 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from pydantic import BaseModel
-import hashlib
 
 from app.database import get_db
 from app.models.user import User
+from app.core.security import hash_password, verify_password, create_access_token
 
 
 router = APIRouter(tags=["auth"])
-
-
-def hash_password(password: str) -> str:
-    return hashlib.sha256(password.encode()).hexdigest()
 
 
 class RegisterRequest(BaseModel):
@@ -51,8 +47,13 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(new_user)
 
+        # مستقیم بعد از ثبت‌نام هم لاگینش می‌کنیم و توکن می‌دیم
+        access_token = create_access_token(data={"sub": str(new_user.id)})
+
         return {
             "message": "registered",
+            "access_token": access_token,
+            "token_type": "bearer",
             "id": new_user.id,
             "username": new_user.username,
             "full_name": new_user.full_name,
@@ -70,11 +71,15 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
 
     user = db.query(User).filter(User.username == data.username).first()
 
-    if not user or user.password_hash != hash_password(data.password):
+    if not user or not verify_password(data.password, user.password_hash):
         raise HTTPException(status_code=400, detail="نام کاربری یا رمز عبور اشتباه است")
+
+    access_token = create_access_token(data={"sub": str(user.id)})
 
     return {
         "message": "logged in",
+        "access_token": access_token,
+        "token_type": "bearer",
         "id": user.id,
         "username": user.username,
         "full_name": user.full_name,

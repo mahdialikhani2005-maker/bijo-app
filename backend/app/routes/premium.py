@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from app.database import get_db
 from app.models.user import User
 from app.models.premium import Premium
+from app.core.deps import get_current_user
 
 router = APIRouter(prefix="/premium", tags=["premium"])
 
@@ -19,28 +20,32 @@ PLANS = {
 
 
 class PremiumPurchaseRequest(BaseModel):
-    user_id: int
     plan: str
 
 
 @router.post("/buy")
-def buy_premium(data: PremiumPurchaseRequest, db: Session = Depends(get_db)):
-
-    user = db.query(User).filter(User.id == data.user_id).first()
-
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
+def buy_premium(
+    data: PremiumPurchaseRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     if data.plan not in PLANS:
         raise HTTPException(status_code=400, detail="Invalid plan")
 
+    # ------------------------------------------------------------
+    # نکته‌ی مهم برای بعداً: اینجا هنوز پرداخت واقعی چک نمیشه.
+    # وقتی درگاه پرداخت رو وصل کردی، این تابع باید فقط از طریق
+    # callback/webhook تایید‌شده‌ی درگاه صدا زده بشه، نه مستقیم
+    # از فرانت‌اند/اپ. الان فقط برای تسته.
+    # ------------------------------------------------------------
+
     days = PLANS[data.plan]
 
-    premium = db.query(Premium).filter(Premium.user_id == data.user_id).first()
+    premium = db.query(Premium).filter(Premium.user_id == current_user.id).first()
 
     if not premium:
         premium = Premium(
-            user_id=data.user_id,
+            user_id=current_user.id,
             is_active=True,
             start_date=datetime.utcnow(),
             end_date=datetime.utcnow() + timedelta(days=days)

@@ -4,11 +4,12 @@ from pydantic import BaseModel
 
 from app.database import get_db
 from app.models.heart import Heart
+from app.models.user import User
+from app.core.deps import get_current_user
 
 router = APIRouter(prefix="/hearts", tags=["hearts"])
 
 
-# نمایش اطلاعات قلب
 class HeartSchema(BaseModel):
     user_id: int
     heart_count: int
@@ -17,14 +18,16 @@ class HeartSchema(BaseModel):
         from_attributes = True
 
 
-# گرفتن تعداد قلب‌های کاربر
-@router.get("/{user_id}", response_model=HeartSchema)
-def get_user_hearts(user_id: int, db: Session = Depends(get_db)):
-
-    heart = db.query(Heart).filter(Heart.user_id == user_id).first()
+# گرفتن تعداد قلب‌های خودِ کاربر لاگین‌کرده
+@router.get("/me", response_model=HeartSchema)
+def get_my_hearts(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    heart = db.query(Heart).filter(Heart.user_id == current_user.id).first()
 
     if not heart:
-        heart = Heart(user_id=user_id, heart_count=5)
+        heart = Heart(user_id=current_user.id, heart_count=5)
         db.add(heart)
         db.commit()
         db.refresh(heart)
@@ -32,11 +35,13 @@ def get_user_hearts(user_id: int, db: Session = Depends(get_db)):
     return heart
 
 
-# کم کردن قلب
-@router.post("/{user_id}/decrease")
-def decrease_heart(user_id: int, db: Session = Depends(get_db)):
-
-    heart = db.query(Heart).filter(Heart.user_id == user_id).first()
+# کم کردن قلب خودِ کاربر لاگین‌کرده
+@router.post("/decrease")
+def decrease_heart(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    heart = db.query(Heart).filter(Heart.user_id == current_user.id).first()
 
     if not heart or heart.heart_count <= 0:
         raise HTTPException(status_code=400, detail="No hearts left")
