@@ -11,7 +11,6 @@ from app.database import engine, Base
 from app.models import user, heart, progress, premium, subscription
 
 # Import routes
-from app.routes import user as user_routes
 from app.routes import auth
 from app.routes import progress as progress_routes
 from app.routes import heart as heart_routes
@@ -41,8 +40,6 @@ app.add_middleware(
 # احراز هویت
 app.include_router(auth.router, prefix="/api")
 
-# کاربران
-app.include_router(user_routes.router, prefix="/api")
 
 # پیشرفت
 app.include_router(progress_routes.router, prefix="/api/progress")
