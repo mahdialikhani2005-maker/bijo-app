@@ -27,7 +27,6 @@
       color: var(--duo-text);
     }
 
-    /* کارت اصلی با گوشه‌های گرد دولینگو */
     .card {
       background: #fff;
       padding: 32px;
@@ -45,7 +44,6 @@
       color: #3c3c3c;
     }
 
-    /* استایل اینپوت‌ها */
     input {
       width: 100%;
       padding: 14px 16px;
@@ -63,7 +61,6 @@
       border-color: var(--duo-blue);
     }
 
-    /* دکمه سه‌بعدی آبی (مشابه دکمه‌های درس در عکس) */
     .btn-blue {
       width: 100%;
       background: var(--duo-blue);
@@ -85,7 +82,6 @@
       transform: translateY(4px);
     }
 
-    /* دکمه سه‌بعدی سبز برای تایید نهایی */
     .btn-green {
       width: 100%;
       background: var(--duo-green);
@@ -128,15 +124,29 @@
       font-weight: bold;
       margin-bottom: 15px;
     }
+
+    .switch-link {
+      display: block;
+      margin-top: 16px;
+      color: var(--duo-blue);
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .switch-link:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
 
 <div class="card">
-  
+
   <h2>خوش آمدید!</h2>
 
-  <!-- مرحله اول: دریافت اطلاعات -->
+  <!-- مرحله اول: ثبت‌نام -->
   <div id="register-step">
     <h3 style="color: var(--duo-blue);">ساخت حساب کاربری</h3>
     <input type="text" id="name" placeholder="نام و نام‌خانوادگی" />
@@ -145,6 +155,7 @@
     <input type="password" id="password" placeholder="رمز عبور" />
     <button class="btn-blue" type="button" onclick="sendMockSms()">ارسال کد تایید</button>
     <div id="register-error" class="error-msg"></div>
+    <a class="switch-link" onclick="showLogin()">قبلاً ثبت‌نام کرده‌اید؟ وارد شوید</a>
   </div>
 
   <!-- مرحله دوم: تایید OTP -->
@@ -156,6 +167,16 @@
     <button id="verify-code-btn" class="btn-green" type="button" onclick="verifyCode()">تایید و ورود</button>
     <div id="verify-error" class="error-msg"></div>
     <div id="verify-success" style="color:var(--duo-green); font-weight:bold; margin-top:10px;"></div>
+  </div>
+
+  <!-- مرحله سوم: ورود کاربرانی که قبلاً ثبت‌نام کردن -->
+  <div id="login-step" style="display:none;">
+    <h3 style="color: var(--duo-blue);">ورود به حساب کاربری</h3>
+    <input type="text" id="login-username" placeholder="نام کاربری" />
+    <input type="password" id="login-password" placeholder="رمز عبور" />
+    <button class="btn-blue" type="button" onclick="handleLogin()">ورود</button>
+    <div id="login-error" class="error-msg"></div>
+    <a class="switch-link" onclick="showRegister()">حساب ندارید؟ ثبت‌نام کنید</a>
   </div>
 
 </div>
@@ -178,9 +199,47 @@ function showError(id, msg) {
 }
 
 function clearMessages() {
-  ["register-error","verify-error","verify-success"].forEach(id=>{
+  ["register-error","verify-error","verify-success","login-error"].forEach(id=>{
     if($(id)) $(id).textContent="";
   });
+}
+
+function showLogin() {
+  clearMessages();
+  $("register-step").style.display = "none";
+  $("verify-step").style.display = "none";
+  $("login-step").style.display = "block";
+}
+
+function showRegister() {
+  clearMessages();
+  $("login-step").style.display = "none";
+  $("verify-step").style.display = "none";
+  $("register-step").style.display = "block";
+}
+
+async function handleLogin() {
+  clearMessages();
+
+  const username = getValue("login-username");
+  const password = getValue("login-password");
+
+  if (!username || !password) {
+    showError("login-error", "نام کاربری و رمز عبور را وارد کنید.");
+    return;
+  }
+
+  const btn = document.querySelector("#login-step .btn-blue");
+  btn.disabled = true;
+
+  try {
+    await loginUser(username, password);
+    window.location.href = "home.html";
+  } catch (err) {
+    showError("login-error", err.message || "نام کاربری یا رمز عبور اشتباه است.");
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 function validateRegisterForm() {
@@ -218,9 +277,8 @@ function sendMockSms() {
     return;
   }
 
-  // شبیه‌سازی کد SMS
   generatedCode = String(Math.floor(1000 + Math.random() * 9000));
-  codeExpiresAt = Date.now() + 120000; // 2 دقیقه
+  codeExpiresAt = Date.now() + 120000;
 
   $("register-step").style.display = "none";
   $("verify-step").style.display = "block";
@@ -263,7 +321,7 @@ async function verifyCode() {
     }, 1000);
 
   } catch (err) {
-    showError("verify-error","خطا در ثبت‌نام. احتمالاً نام کاربری تکراری است.");
+    showError("verify-error", err.message || "خطا در ثبت‌نام. احتمالاً نام کاربری تکراری است.");
   }
 }
 
