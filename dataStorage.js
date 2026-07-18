@@ -20,7 +20,6 @@ async function apiRequest(url, options = {}) {
     ...(options.headers || {})
   };
 
-  // اگه توکن داریم و صراحتاً نگفتن بدون توکن بفرست، بفرستش
   if (token && !options.skipAuth) {
     headers["Authorization"] = `Bearer ${token}`;
   }
@@ -47,7 +46,6 @@ function saveUser(user) {
   currentUser = user;
   localStorage.setItem("user", JSON.stringify(user));
 
-  // توکنی که سرور بعد از لاگین/ثبت‌نام برمی‌گردونه رو جدا ذخیره می‌کنیم
   if (user.access_token) {
     localStorage.setItem("access_token", user.access_token);
   }
@@ -61,6 +59,7 @@ function logoutUser() {
   currentUser = null;
   localStorage.removeItem("user");
   localStorage.removeItem("access_token");
+  localStorage.removeItem("premiumUntil");
 }
 
 function getUserId() { return currentUser?.id; }
@@ -74,7 +73,7 @@ function isLoggedIn() { return currentUser != null && !!getToken(); }
 async function registerUser(data) {
   const user = await apiRequest(`${API_BASE}/register`, {
     method: "POST",
-    skipAuth: true, // موقع ثبت‌نام هنوز توکنی نداریم
+    skipAuth: true,
     body: JSON.stringify({
       full_name: data.name || data.full_name,
       username: data.username,
@@ -97,7 +96,7 @@ async function loginUser(username, password) {
 }
 
 // ======================
-// PREMIUM
+// PREMIUM (حالا واقعاً از سرور تایید می‌گیره)
 // ======================
 
 function isPremium() {
@@ -106,8 +105,31 @@ function isPremium() {
   return new Date(parseInt(until)) > new Date();
 }
 
+// planId باید یکی از این‌ها باشه: premium_30d, premium_90d, premium_180d, premium_365d
+async function buyPremium(planId) {
+  if (!isLoggedIn()) {
+    throw new Error("ابتدا وارد حساب کاربری خود شوید");
+  }
+
+  const data = await apiRequest(`${API_BASE}/premium/buy`, {
+    method: "POST",
+    body: JSON.stringify({ plan: planId })
+  });
+
+  // expires_on از سرور میاد، نه از محاسبه‌ی خودِ مرورگر
+  const expiresAt = new Date(data.expires_on).getTime();
+  localStorage.setItem("premiumUntil", expiresAt);
+
+  if (currentUser) {
+    currentUser.premium = true;
+    localStorage.setItem("user", JSON.stringify(currentUser));
+  }
+
+  return data;
+}
+
 // ======================
-// HEARTS (حالا واقعاً از سرور می‌خونه، نه فقط لوکال)
+// HEARTS
 // ======================
 
 async function fetchHearts() {
@@ -155,7 +177,7 @@ async function loseHeart() {
 }
 
 // ======================
-// XP (حالا واقعاً به سرور ارسال میشه)
+// XP
 // ======================
 
 async function addXP(amount, lesson_slug = "general") {
@@ -209,6 +231,7 @@ window.getToken = getToken;
 window.getUserProfile = getUserProfile;
 window.isLoggedIn = isLoggedIn;
 window.isPremium = isPremium;
+window.buyPremium = buyPremium;
 
 window.getHearts = getHearts;
 window.loseHeart = loseHeart;

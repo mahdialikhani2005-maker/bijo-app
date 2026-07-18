@@ -22,6 +22,7 @@
     .plan-features { margin:0 0 18px; padding:0 18px 0 0; color:#444; font-size:14px; line-height:1.9; }
     .buy-btn { width:100%; border:none; border-radius:12px; background:#7c5cff; color:#fff; padding:12px; font-size:15px; cursor:pointer; }
     .buy-btn:hover { background:#6948f5; }
+    .buy-btn:disabled { background:#ccc; cursor:not-allowed; }
     .back-link { display:inline-block; margin-top:24px; text-decoration:none; color:#7c5cff; font-weight:bold; }
     .message { margin-top:18px; padding:12px 14px; border-radius:12px; display:none; font-size:14px; }
     .message.success { display:block; background:#e9f9ef; color:#18794e; }
@@ -50,7 +51,7 @@
           <li>استفاده راحت‌تر از تمرین‌ها</li>
           <li>فعال‌سازی فوری پس از خرید</li>
         </ul>
-        <button class="buy-btn" onclick="handleBuy(30)">خرید اشتراک</button>
+        <button class="buy-btn" onclick="handleBuy('premium_30d')">خرید اشتراک</button>
       </div>
 
       <div class="plan-card">
@@ -62,7 +63,7 @@
           <li>قلب نامحدود در کل دوره</li>
           <li>به‌صرفه‌تر از ماهانه</li>
         </ul>
-        <button class="buy-btn" onclick="handleBuy(90)">خرید اشتراک</button>
+        <button class="buy-btn" onclick="handleBuy('premium_90d')">خرید اشتراک</button>
       </div>
 
       <div class="plan-card">
@@ -74,7 +75,7 @@
           <li>دسترسی طولانی‌تر به امکانات ویژه</li>
           <li>ارزش خرید بالاتر</li>
         </ul>
-        <button class="buy-btn" onclick="handleBuy(180)">خرید اشتراک</button>
+        <button class="buy-btn" onclick="handleBuy('premium_180d')">خرید اشتراک</button>
       </div>
 
       <div class="plan-card">
@@ -86,7 +87,7 @@
           <li>بیشترین صرفه اقتصادی</li>
           <li>یک سال استفاده بدون وقفه</li>
         </ul>
-        <button class="buy-btn" onclick="handleBuy(365)">خرید اشتراک</button>
+        <button class="buy-btn" onclick="handleBuy('premium_365d')">خرید اشتراک</button>
       </div>
     </div>
 
@@ -109,26 +110,42 @@
       box.textContent = "شما در حال حاضر اشتراک پریمیوم فعال ندارید.";
     }
 
-    function handleBuy(days) {
-      const until = Date.now() + days * 24 * 60 * 60 * 1000;
-      localStorage.setItem("premiumUntil", until);
-      localStorage.setItem("premium", "true");
-
-      const saved = localStorage.getItem("user");
-      if (saved) {
-        const user = JSON.parse(saved);
-        user.premium = true;
-        localStorage.setItem("user", JSON.stringify(user));
-      }
-
+    async function handleBuy(planId) {
       const box = document.getElementById("messageBox");
-      box.className = "message success";
-      box.textContent = "اشتراک " + days + " روزه با موفقیت فعال شد! 🎉";
+      const buttons = document.querySelectorAll(".buy-btn");
 
-      updatePremiumStatus();
+      buttons.forEach(b => b.disabled = true);
+      box.className = "message";
+      box.style.display = "none";
+
+      try {
+        const result = await window.buyPremium(planId);
+
+        box.className = "message success";
+        box.textContent = "اشتراک با موفقیت فعال شد! 🎉";
+        box.style.display = "block";
+
+        updatePremiumStatus();
+
+      } catch (err) {
+        box.className = "message error";
+        box.textContent = err.message || "خطا در فعال‌سازی اشتراک";
+        box.style.display = "block";
+      } finally {
+        buttons.forEach(b => b.disabled = false);
+      }
     }
 
-    updatePremiumStatus();
+    document.addEventListener("DOMContentLoaded", async () => {
+      if (window.initUserData) await initUserData();
+
+      if (!window.isLoggedIn || !isLoggedIn()) {
+        window.location.href = "auth.html";
+        return;
+      }
+
+      updatePremiumStatus();
+    });
   </script>
 </body>
 </html>
