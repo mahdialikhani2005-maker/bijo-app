@@ -236,10 +236,24 @@ function speak(text) {
   speechSynthesis.speak(utter);
 }
 
+// فایل‌های لازم برای هر درس رو می‌سازه: صفحه‌ی درس، اسکریپتش،
+// استایل مشترک، و تمام عکس‌های همون درس
+function getLessonAssetUrls(lesson) {
+  const jsFile = lesson.nextPage.replace(".html", ".js");
+  const images = lesson.words.map(w => w.image);
+
+  return [
+    lesson.nextPage,
+    jsFile,
+    "lesson.css",
+    ...images
+  ];
+}
+
 // ===== تابع نمایش صفحه معرفی =====
 function renderIntro() {
   const lesson = allLessons[lessonId];
-  
+
   if (!lesson) {
     document.getElementById("intro-container").innerHTML = `
       <h2>❌ Lesson not found!</h2>
@@ -273,7 +287,8 @@ function renderIntro() {
   });
 
   document.getElementById("start-lesson-btn").addEventListener("click", () => {
-    window.location.href = lesson.nextPage;
+    const urls = getLessonAssetUrls(lesson);
+    window.startLessonWithDownload(lessonId, urls, lesson.nextPage, "lesson-loading");
   });
 }
 
