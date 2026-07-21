@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from pydantic import BaseModel
 
 from app.database import get_db
@@ -42,3 +43,16 @@ def add_xp(
     db.refresh(progress)
 
     return {"xp": progress.xp}
+
+
+# مجموع XP کاربر از تمام درس‌ها با هم (برای نمایش بالای صفحه)
+@router.get("/xp/total")
+def get_total_xp(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    total = db.query(func.sum(Progress.xp)).filter(
+        Progress.user_id == current_user.id
+    ).scalar()
+
+    return {"total_xp": total or 0}

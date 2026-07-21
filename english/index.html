@@ -14,11 +14,10 @@
 
 <header class="progress-header">
   <div class="hearts-box">
-    ❤️ <span id="heart-count">5</span>
-    <span id="heart-timer" style="font-size: 0.85em; color: #ef5350; margin-left: 5px;"></span>
+    ❤️ <span id="heart-count">-</span>
   </div>
   <div class="xp-box">
-    ⭐ <span id="total-xp">120</span> XP
+    ⭐ <span id="total-xp">-</span> XP
   </div>
 </header>
 <header class="level-header">
@@ -82,44 +81,21 @@
 <script>
 window.onload = async function() {
     await initUserData();
+    updateStatsUI();
+
+    // هر ۳۰ ثانیه یه‌بار قلب و XP رو از سرور تازه کن (جایگزین شبیه‌سازی قدیمی)
+    setInterval(async () => {
+        await refreshUserStats();
+        updateStatsUI();
+    }, 30000);
+};
+
+function updateStatsUI() {
     const heartDisplay = document.getElementById("heart-count");
     const xpDisplay = document.getElementById("total-xp");
     if (heartDisplay) heartDisplay.textContent = getHearts();
     if (xpDisplay) xpDisplay.textContent = getTotalXP();
-};
-
-function startHeartTimer() {
-    const timerElement = document.getElementById("heart-timer");
-    const heartDisplay = document.getElementById("heart-count");
-    const xpDisplay = document.getElementById("total-xp");
-
-    function updateUI() {
-        if (heartDisplay) heartDisplay.textContent = getHearts();
-        if (xpDisplay) xpDisplay.textContent = getTotalXP();
-    }
-
-    updateUI();
-
-    setInterval(() => {
-        const regenerated = checkAndRegenHearts();
-        if (regenerated && heartDisplay) {
-            heartDisplay.textContent = getHearts();
-        }
-
-        const secondsLeft = getTimeUntilNextHeart();
-        if (secondsLeft === null) {
-            if (timerElement) timerElement.textContent = "";
-        } else {
-            const minutes = Math.floor(secondsLeft / 60);
-            const seconds = secondsLeft % 60;
-            timerElement.textContent = ` (${minutes}:${seconds < 10 ? '0' : ''}${seconds})`;
-        }
-
-        if (xpDisplay) xpDisplay.textContent = getTotalXP();
-    }, 1000);
 }
-
-window.addEventListener('DOMContentLoaded', startHeartTimer);
 </script>
 
 <div id="global-loader" class="global-loader hidden">

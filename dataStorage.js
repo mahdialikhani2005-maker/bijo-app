@@ -5,8 +5,8 @@ const API_BASE = `${API_URL}/api`;
 let currentUser = null;
 let heartsCache = 5;
 let xpCache = 0;
-
-const HEART_REGEN_TIME = 4 * 60 * 60 * 1000; // 4 ساعت
+let nextHeartSeconds = null;
+let heartsFetchedAt = 0;
 
 // ======================
 // HELPER
@@ -96,7 +96,7 @@ async function loginUser(username, password) {
 }
 
 // ======================
-// PREMIUM (حالا واقعاً از سرور تایید می‌گیره)
+// PREMIUM
 // ======================
 
 function isPremium() {
@@ -105,7 +105,6 @@ function isPremium() {
   return new Date(parseInt(until)) > new Date();
 }
 
-// planId باید یکی از این‌ها باشه: premium_30d, premium_90d, premium_180d, premium_365d
 async function buyPremium(planId) {
   if (!isLoggedIn()) {
     throw new Error("ابتدا وارد حساب کاربری خود شوید");
@@ -116,7 +115,6 @@ async function buyPremium(planId) {
     body: JSON.stringify({ plan: planId })
   });
 
-  // expires_on از سرور میاد، نه از محاسبه‌ی خودِ مرورگر
   const expiresAt = new Date(data.expires_on).getTime();
   localStorage.setItem("premiumUntil", expiresAt);
 
@@ -129,23 +127,27 @@ async function buyPremium(planId) {
 }
 
 // ======================
-// HEARTS
+// HEARTS (واقعاً از سرور می‌خونه، شارژ خودکارش هم سمت سرور حساب میشه)
 // ======================
 
 async function fetchHearts() {
   if (isPremium()) {
     heartsCache = 999;
+    nextHeartSeconds = null;
     return heartsCache;
   }
 
   if (!isLoggedIn()) {
     heartsCache = 5;
+    nextHeartSeconds = null;
     return heartsCache;
   }
 
   try {
     const data = await apiRequest(`${API_BASE}/hearts/me`, { method: "GET" });
     heartsCache = data.heart_count;
+    nextHeartSeconds = data.seconds_until_next_heart;
+    heartsFetchedAt = Date.now();
   } catch (err) {
     console.error("خطا در گرفتن قلب‌ها:", err);
   }
@@ -169,6 +171,8 @@ async function loseHeart() {
   try {
     const data = await apiRequest(`${API_BASE}/hearts/decrease`, { method: "POST" });
     heartsCache = data.remaining;
+    nextHeartSeconds = data.seconds_until_next_heart;
+    heartsFetchedAt = Date.now();
   } catch (err) {
     console.error("خطا در کم کردن قلب:", err);
   }
@@ -176,8 +180,24 @@ async function loseHeart() {
   return heartsCache;
 }
 
+// این تابع دیگه خودش قلب رو محاسبه نمی‌کنه (محاسبه سمت سرور انجام میشه)،
+// فقط یه‌بار دیگه از سرور آخرین وضعیت رو می‌گیره
+async function checkAndRegenHearts() {
+  const before = heartsCache;
+  await fetchHearts();
+  return heartsCache !== before;
+}
+
+// شمارش‌معکوس نمایشی (بدون نیاز به درخواست جدید هر ثانیه)
+function getTimeUntilNextHeart() {
+  if (isPremium() || nextHeartSeconds === null) return null;
+  const elapsedSeconds = (Date.now() - heartsFetchedAt) / 1000;
+  const remaining = Math.round(nextHeartSeconds - elapsedSeconds);
+  return Math.max(0, remaining);
+}
+
 // ======================
-// XP
+// XP (مجموع واقعی از سرور)
 // ======================
 
 async function addXP(amount, lesson_slug = "general") {
@@ -188,11 +208,12 @@ async function addXP(amount, lesson_slug = "general") {
   }
 
   try {
-    const data = await apiRequest(`${API_BASE}/progress/xp`, {
+    await apiRequest(`${API_BASE}/progress/xp`, {
       method: "POST",
       body: JSON.stringify({ lesson_slug, amount })
     });
-    xpCache = data.xp;
+    // بعد از ثبت، مجموع کل رو دوباره از سرور می‌گیریم که همه‌جا هماهنگ باشه
+    await fetchXP();
   } catch (err) {
     console.error("خطا در ثبت XP:", err);
   }
@@ -201,11 +222,28 @@ async function addXP(amount, lesson_slug = "general") {
 }
 
 async function fetchXP() {
-  xpCache = parseInt(localStorage.getItem("xp") || "0");
+  if (!isLoggedIn()) {
+    xpCache = parseInt(localStorage.getItem("xp") || "0");
+    return xpCache;
+  }
+
+  try {
+    const data = await apiRequest(`${API_BASE}/progress/xp/total`, { method: "GET" });
+    xpCache = data.total_xp;
+  } catch (err) {
+    console.error("خطا در گرفتن مجموع XP:", err);
+  }
+
   return xpCache;
 }
 
 function getTotalXP() { return xpCache; }
+
+// رفرش دوره‌ای قلب‌ها و XP از سرور
+async function refreshUserStats() {
+  await fetchHearts();
+  await fetchXP();
+}
 
 // ======================
 // INIT
@@ -238,4 +276,6 @@ window.loseHeart = loseHeart;
 window.fetchHearts = fetchHearts;
 
 window.addXP = addXP;
+window.fetchXP = fetchXP;
 window.getTotalXP = getTotalXP;
+window.refreshUserStats = refreshUserStats;
