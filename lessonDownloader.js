@@ -1,14 +1,14 @@
 // lessonDownloader.js
 // مسئول دانلود و کش کردن فایل‌های هر درس رو خودِ گوشی/مرورگر کاربر
 
-const LESSON_CACHE_NAME = "bijo-lessons-v1";
+const LESSON_CACHE_NAME = "bijo-lessons-v2";
 
 function isLessonDownloaded(lessonId) {
-  return localStorage.getItem(`lesson_downloaded_${lessonId}`) === "1";
+  return localStorage.getItem(`lesson_downloaded_${LESSON_CACHE_NAME}_${lessonId}`) === "1";
 }
 
 function markLessonDownloaded(lessonId) {
-  localStorage.setItem(`lesson_downloaded_${lessonId}`, "1");
+  localStorage.setItem(`lesson_downloaded_${LESSON_CACHE_NAME}_${lessonId}`, "1");
 }
 
 async function downloadLesson(lessonId, urls) {
