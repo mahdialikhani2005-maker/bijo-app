@@ -2,7 +2,9 @@ body {
   font-family: sans-serif;
   direction: rtl;
   background: #f5f7fb;
-  padding: 140px;
+  padding: 16px;
+  margin: 0;
+  box-sizing: border-box;
 }
 
 #app {
@@ -10,12 +12,13 @@ body {
   margin: auto;
   background: white;
   border-radius: 16px;
-  padding: 140px;
+  padding: 20px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  box-sizing: border-box;
 }
 
 img {
-  max-width: 180px;
+  max-width: 100%;
   display: block;
   margin: 15px auto;
   border-radius: 12px;
@@ -103,7 +106,7 @@ button {
   gap: 10px;
   margin-top: 16px;
 }
-/* Word Builder container */
+
 #word-builder {
   margin-top: 15px;
   min-height: 64px;
@@ -131,8 +134,6 @@ button {
   direction: rtl;
 }
 
-
-/* Direction variants */
 #word-builder.ltr {
   direction: ltr;
   justify-content: flex-start;
@@ -149,8 +150,6 @@ button {
   display: none;
 }
 
-
-/* Word cards */
 .tile {
   display: inline-flex;
   align-items: center;
@@ -173,7 +172,6 @@ button {
   box-shadow: 0 4px 10px rgba(0,0,0,0.12);
 }
 
-/* Options area */
 #options {
   margin-top: 14px;
   display: grid;
@@ -183,21 +181,17 @@ button {
   align-items: center;
 }
 
-/* Make options also look like cards */
 #options .tile {
   background: #fff;
 }
 
-
-
 .image-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
   justify-items: center;
   align-items: center;
 }
-
 
 .img-option {
   border: 2px solid #ccc;
@@ -206,6 +200,7 @@ button {
   background-color: white;
   cursor: pointer;
   transition: transform 0.2s;
+  width: 100%;
 }
 
 .img-option:hover {
@@ -214,9 +209,14 @@ button {
 
 .img-option img {
   width: 100%;
-  height: 140px;
+  height: 120px;
   object-fit: cover;
   display: block;
 }
-/* جهت چپ به راست برای انگلیسی‌ها */
 
+#hud {
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 12px;
+}

@@ -288,15 +288,18 @@ function renderIntro() {
     const card = document.createElement("div");
     card.className = "word-card";
     card.innerHTML = `
+      <span class="word-speaker">🔊</span>
+      <div class="word-text">
+        <div class="word-en">${w.en}</div>
+        <div class="word-fa">${w.fa}</div>
+      </div>
       <img src="${w.image}" alt="${w.en}">
-      <div class="word-en" style="font-size: 20px;">${w.en}</div>
-      <div class="word-fa">${w.fa}</div>
     `;
     card.addEventListener("click", () => {
       speak(w.en);
-      card.style.borderColor = "#00b894";
+      card.classList.add("playing");
       setTimeout(() => {
-        card.style.borderColor = "transparent";
+        card.classList.remove("playing");
       }, 800);
     });
     container.appendChild(card);
