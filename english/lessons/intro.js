@@ -228,6 +228,22 @@ const allLessons = {
 
 // ===== تابع پخش صدا (انگلیسی) =====
 function speak(text) {
+  // اگه داخل اپ موبایل (Capacitor) اجرا میشه، از موتور صدای خودِ اندروید استفاده کن
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    try {
+      window.Capacitor.Plugins.TextToSpeech.speak({
+        text: text,
+        lang: "en-US",
+        rate: 0.9,
+        category: "ambient"
+      });
+    } catch (err) {
+      console.warn("خطا در پخش صدا (native):", err);
+    }
+    return;
+  }
+
+  // وگرنه (تو مرورگر معمولی/سایت)، از همون روش قبلی استفاده کن
   if (!window.speechSynthesis) return;
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = "en-US";
