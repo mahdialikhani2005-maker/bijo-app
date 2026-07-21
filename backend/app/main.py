@@ -38,9 +38,9 @@ app.add_middleware(
 # -------------------------
 
 app.include_router(auth.router, prefix="/api")
-app.include_router(progress_routes.router, prefix="/api/progress")
-app.include_router(heart_routes.router, prefix="/api/hearts")
-app.include_router(premium_routes.router, prefix="/api/premium")
+app.include_router(progress_routes.router, prefix="/api")
+app.include_router(heart_routes.router, prefix="/api")
+app.include_router(premium_routes.router, prefix="/api")
 
 # -------------------------
 # Health Check
