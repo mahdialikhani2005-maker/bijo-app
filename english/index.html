@@ -83,16 +83,6 @@ window.onload = async function() {
     await initUserData();
     updateStatsUI();
 
-    // --- دیباگ موقت: وضعیت لاگین رو مستقیم رو خودِ صفحه نشون میده ---
-    const debugBox = document.createElement("div");
-    debugBox.style.cssText = "position:fixed; bottom:70px; left:8px; right:8px; background:#000; color:#0f0; font-size:11px; padding:8px; border-radius:8px; z-index:9999; direction:ltr; text-align:left; white-space:pre-wrap;";
-    debugBox.textContent =
-      "isLoggedIn: " + (window.isLoggedIn ? isLoggedIn() : "func missing") + "\n" +
-      "token exists: " + !!localStorage.getItem("access_token") + "\n" +
-      "user in storage: " + localStorage.getItem("user");
-    document.body.appendChild(debugBox);
-    // --- پایان دیباگ موقت ---
-
     setInterval(async () => {
         await refreshUserStats();
         updateStatsUI();

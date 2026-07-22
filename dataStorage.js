@@ -249,8 +249,25 @@ async function refreshUserStats() {
 // INIT
 // ======================
 
+// اگه کاربر نه واقعی لاگین کرده نه اکانت مهمان داره، خودکار یه اکانت
+// مهمان براش می‌سازه (بدون نیاز به پر کردن هیچ فرمی)
+async function ensureGuestSession() {
+  if (isLoggedIn()) return;
+
+  try {
+    const user = await apiRequest(`${API_BASE}/guest`, {
+      method: "POST",
+      skipAuth: true
+    });
+    saveUser(user);
+  } catch (err) {
+    console.error("خطا در ساخت اکانت مهمان:", err);
+  }
+}
+
 async function initUserData() {
   loadUserFromStorage();
+  await ensureGuestSession();
   await fetchHearts();
   await fetchXP();
 }
@@ -260,6 +277,7 @@ async function initUserData() {
 // ======================
 
 window.initUserData = initUserData;
+window.ensureGuestSession = ensureGuestSession;
 
 window.registerUser = registerUser;
 window.loginUser = loginUser;

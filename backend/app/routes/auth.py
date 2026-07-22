@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
@@ -47,7 +49,6 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(new_user)
 
-        # مستقیم بعد از ثبت‌نام هم لاگینش می‌کنیم و توکن می‌دیم
         access_token = create_access_token(data={"sub": str(new_user.id)})
 
         return {
@@ -85,4 +86,36 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
         "full_name": user.full_name,
         "phone_number": user.phone_number,
         "role": user.role
+    }
+
+
+# ساخت خودکار یه اکانت مهمان، برای کاربرایی که بدون ثبت‌نام
+# می‌خوان از اپ استفاده کنن. قلب/XP همچنان از سرور کنترل میشه.
+@router.post("/guest")
+def create_guest(db: Session = Depends(get_db)):
+    guest_suffix = uuid.uuid4().hex[:10]
+
+    new_user = User(
+        full_name="کاربر مهمان",
+        username=f"guest_{guest_suffix}",
+        phone_number=f"guest_{guest_suffix}",
+        password_hash=hash_password(uuid.uuid4().hex),  # رمز تصادفی، هیچ‌وقت به کاربر نشون داده نمیشه
+        role="guest"
+    )
+
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    access_token = create_access_token(data={"sub": str(new_user.id)})
+
+    return {
+        "message": "guest created",
+        "access_token": access_token,
+        "token_type": "bearer",
+        "id": new_user.id,
+        "username": new_user.username,
+        "full_name": new_user.full_name,
+        "phone_number": new_user.phone_number,
+        "role": new_user.role
     }
