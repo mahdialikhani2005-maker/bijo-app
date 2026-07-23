@@ -8,220 +8,220 @@ const allLessons = {
     title: "Lesson 1: People",
     nextPage: "lesson1.html",
     words: [
-      { en: "man", fa: "مرد", image: "../../media/people/man.png" },
-      { en: "woman", fa: "زن", image: "../../media/people/woman.png" },
-      { en: "boy", fa: "پسر", image: "../../media/people/boy.png" },
-      { en: "girl", fa: "دختر", image: "../../media/people/girl.png" },
-      { en: "baby", fa: "نوزاد", image: "../../media/people/baby.png" }
+      { en: "man", fa: "مرد", image: "../../media/people/man.webp" },
+      { en: "woman", fa: "زن", image: "../../media/people/woman.webp" },
+      { en: "boy", fa: "پسر", image: "../../media/people/boy.webp" },
+      { en: "girl", fa: "دختر", image: "../../media/people/girl.webp" },
+      { en: "baby", fa: "نوزاد", image: "../../media/people/baby.webp" }
     ]
   },
   "en-lesson2": {
     title: "Lesson 2: Body Parts",
     nextPage: "lesson2.html",
     words: [
-      { en: "head", fa: "سر", image: "../../media/body/head.png" },
-      { en: "hand", fa: "دست", image: "../../media/body/hand.png" },
-      { en: "eye", fa: "چشم", image: "../../media/body/eye.png" },
-      { en: "foot", fa: "پا", image: "../../media/body/foot.png" },
-      { en: "nose", fa: "بینی", image: "../../media/body/nose.png" }
+      { en: "head", fa: "سر", image: "../../media/body/head.webp" },
+      { en: "hand", fa: "دست", image: "../../media/body/hand.webp" },
+      { en: "eye", fa: "چشم", image: "../../media/body/eye.webp" },
+      { en: "foot", fa: "پا", image: "../../media/body/foot.webp" },
+      { en: "nose", fa: "بینی", image: "../../media/body/nose.webp" }
     ]
   },
   "en-lesson3": {
     title: "Lesson 3: House",
     nextPage: "lesson3.html",
     words: [
-      { en: "house", fa: "خانه", image: "../../media/house/house.png" },
-      { en: "room", fa: "اتاق", image: "../../media/house/room.png" },
-      { en: "door", fa: "در", image: "../../media/house/door.png" },
-      { en: "window", fa: "پنجره", image: "../../media/house/window.png" },
-      { en: "kitchen", fa: "آشپزخانه", image: "../../media/house/kitchen.png" }
+      { en: "house", fa: "خانه", image: "../../media/house/house.webp" },
+      { en: "room", fa: "اتاق", image: "../../media/house/room.webp" },
+      { en: "door", fa: "در", image: "../../media/house/door.webp" },
+      { en: "window", fa: "پنجره", image: "../../media/house/window.webp" },
+      { en: "kitchen", fa: "آشپزخانه", image: "../../media/house/kitchen.webp" }
     ]
   },
   "en-lesson4": {
     title: "Lesson 4: Clothes",
     nextPage: "lesson4.html",
     words: [
-      { en: "shirt", fa: "پیراهن", image: "../../media/clothes/shirt.png" },
-      { en: "pants", fa: "شلوار", image: "../../media/clothes/pants.png" },
-      { en: "shoes", fa: "کفش", image: "../../media/clothes/shoes.png" },
-      { en: "hat", fa: "کلاه", image: "../../media/clothes/hat.png" },
-      { en: "dress", fa: "لباس", image: "../../media/clothes/dress.png" }
+      { en: "shirt", fa: "پیراهن", image: "../../media/clothes/shirt.webp" },
+      { en: "pants", fa: "شلوار", image: "../../media/clothes/pants.webp" },
+      { en: "shoes", fa: "کفش", image: "../../media/clothes/shoes.webp" },
+      { en: "hat", fa: "کلاه", image: "../../media/clothes/hat.webp" },
+      { en: "dress", fa: "لباس", image: "../../media/clothes/dress.webp" }
     ]
   },
   "en-lesson5": {
     title: "Lesson 5: Food",
     nextPage: "lesson5.html",
     words: [
-      { en: "bread", fa: "نان", image: "../../media/food/bread.png" },
-      { en: "rice", fa: "برنج", image: "../../media/food/rice.png" },
-      { en: "meat", fa: "گوشت", image: "../../media/food/meat.png" },
-      { en: "egg", fa: "تخم‌مرغ", image: "../../media/food/egg.png" },
-      { en: "milk", fa: "شیر", image: "../../media/food/milk.png" }
+      { en: "bread", fa: "نان", image: "../../media/food/bread.webp" },
+      { en: "rice", fa: "برنج", image: "../../media/food/rice.webp" },
+      { en: "meat", fa: "گوشت", image: "../../media/food/meat.webp" },
+      { en: "egg", fa: "تخم‌مرغ", image: "../../media/food/egg.webp" },
+      { en: "milk", fa: "شیر", image: "../../media/food/milk.webp" }
     ]
   },
   "en-lesson6": {
     title: "Lesson 6: Fruits",
     nextPage: "lesson6.html",
     words: [
-      { en: "apple", fa: "سیب", image: "../../media/fruits/apple.png" },
-      { en: "banana", fa: "موز", image: "../../media/fruits/banana.png" },
-      { en: "orange", fa: "پرتقال", image: "../../media/fruits/orange.png" },
-      { en: "grape", fa: "انگور", image: "../../media/fruits/grape.png" },
-      { en: "watermelon", fa: "هندوانه", image: "../../media/fruits/watermelon.png" }
+      { en: "apple", fa: "سیب", image: "../../media/fruits/apple.webp" },
+      { en: "banana", fa: "موز", image: "../../media/fruits/banana.webp" },
+      { en: "orange", fa: "پرتقال", image: "../../media/fruits/orange.webp" },
+      { en: "grape", fa: "انگور", image: "../../media/fruits/grape.webp" },
+      { en: "watermelon", fa: "هندوانه", image: "../../media/fruits/watermelon.webp" }
     ]
   },
   "en-lesson7": {
     title: "Lesson 7: Vegetables",
     nextPage: "lesson7.html",
     words: [
-      { en: "tomato", fa: "گوجه", image: "../../media/vegetables/tomato.png" },
-      { en: "potato", fa: "سیب‌زمینی", image: "../../media/vegetables/potato.png" },
-      { en: "carrot", fa: "هویج", image: "../../media/vegetables/carrot.png" },
-      { en: "onion", fa: "پیاز", image: "../../media/vegetables/onion.png" },
-      { en: "cucumber", fa: "خیار", image: "../../media/vegetables/cucumber.png" }
+      { en: "tomato", fa: "گوجه", image: "../../media/vegetables/tomato.webp" },
+      { en: "potato", fa: "سیب‌زمینی", image: "../../media/vegetables/potato.webp" },
+      { en: "carrot", fa: "هویج", image: "../../media/vegetables/carrot.webp" },
+      { en: "onion", fa: "پیاز", image: "../../media/vegetables/onion.webp" },
+      { en: "cucumber", fa: "خیار", image: "../../media/vegetables/cucumber.webp" }
     ]
   },
   "en-lesson8": {
     title: "Lesson 8: Animals",
     nextPage: "lesson8.html",
     words: [
-      { en: "dog", fa: "سگ", image: "../../media/animals/dog.png" },
-      { en: "cat", fa: "گربه", image: "../../media/animals/cat.png" },
-      { en: "bird", fa: "پرنده", image: "../../media/animals/bird.png" },
-      { en: "fish", fa: "ماهی", image: "../../media/animals/fish.png" },
-      { en: "horse", fa: "اسب", image: "../../media/animals/horse.png" }
+      { en: "dog", fa: "سگ", image: "../../media/animals/dog.webp" },
+      { en: "cat", fa: "گربه", image: "../../media/animals/cat.webp" },
+      { en: "bird", fa: "پرنده", image: "../../media/animals/bird.webp" },
+      { en: "fish", fa: "ماهی", image: "../../media/animals/fish.webp" },
+      { en: "horse", fa: "اسب", image: "../../media/animals/horse.webp" }
     ]
   },
   "en-lesson9": {
     title: "Lesson 9: Nature",
     nextPage: "lesson9.html",
     words: [
-      { en: "sun", fa: "خورشید", image: "../../media/nature/sun.png" },
-      { en: "moon", fa: "ماه", image: "../../media/nature/moon.png" },
-      { en: "star", fa: "ستاره", image: "../../media/nature/star.png" },
-      { en: "sky", fa: "آسمان", image: "../../media/nature/sky.png" },
-      { en: "rain", fa: "باران", image: "../../media/nature/rain.png" }
+      { en: "sun", fa: "خورشید", image: "../../media/nature/sun.webp" },
+      { en: "moon", fa: "ماه", image: "../../media/nature/moon.webp" },
+      { en: "star", fa: "ستاره", image: "../../media/nature/star.webp" },
+      { en: "sky", fa: "آسمان", image: "../../media/nature/sky.webp" },
+      { en: "rain", fa: "باران", image: "../../media/nature/rain.webp" }
     ]
   },
   "en-lesson10": {
     title: "Lesson 10: Weather",
     nextPage: "lesson10.html",
     words: [
-      { en: "hot", fa: "گرم", image: "../../media/weather/hot.png" },
-      { en: "cold", fa: "سرد", image: "../../media/weather/cold.png" },
-      { en: "sunny", fa: "آفتابی", image: "../../media/weather/sunny.png" },
-      { en: "cloudy", fa: "ابری", image: "../../media/weather/cloudy.png" },
-      { en: "wind", fa: "باد", image: "../../media/weather/wind.png" }
+      { en: "hot", fa: "گرم", image: "../../media/weather/hot.webp" },
+      { en: "cold", fa: "سرد", image: "../../media/weather/cold.webp" },
+      { en: "sunny", fa: "آفتابی", image: "../../media/weather/sunny.webp" },
+      { en: "cloudy", fa: "ابری", image: "../../media/weather/cloudy.webp" },
+      { en: "wind", fa: "باد", image: "../../media/weather/wind.webp" }
     ]
   },
   "en-lesson11": {
     title: "Lesson 11: Colors",
     nextPage: "lesson11.html",
     words: [
-      { en: "red", fa: "قرمز", image: "../../media/colors/red.png" },
-      { en: "blue", fa: "آبی", image: "../../media/colors/blue.png" },
-      { en: "green", fa: "سبز", image: "../../media/colors/green.png" },
-      { en: "yellow", fa: "زرد", image: "../../media/colors/yellow.png" },
-      { en: "black", fa: "مشکی", image: "../../media/colors/black.png" }
+      { en: "red", fa: "قرمز", image: "../../media/colors/red.webp" },
+      { en: "blue", fa: "آبی", image: "../../media/colors/blue.webp" },
+      { en: "green", fa: "سبز", image: "../../media/colors/green.webp" },
+      { en: "yellow", fa: "زرد", image: "../../media/colors/yellow.webp" },
+      { en: "black", fa: "مشکی", image: "../../media/colors/black.webp" }
     ]
   },
   "en-lesson12": {
     title: "Lesson 12: Numbers",
     nextPage: "lesson12.html",
     words: [
-      { en: "one", fa: "یک", image: "../../media/numbers/one.png" },
-      { en: "two", fa: "دو", image: "../../media/numbers/two.png" },
-      { en: "three", fa: "سه", image: "../../media/numbers/three.png" },
-      { en: "four", fa: "چهار", image: "../../media/numbers/four.png" },
-      { en: "five", fa: "پنج", image: "../../media/numbers/five.png" }
+      { en: "one", fa: "یک", image: "../../media/numbers/one.webp" },
+      { en: "two", fa: "دو", image: "../../media/numbers/two.webp" },
+      { en: "three", fa: "سه", image: "../../media/numbers/three.webp" },
+      { en: "four", fa: "چهار", image: "../../media/numbers/four.webp" },
+      { en: "five", fa: "پنج", image: "../../media/numbers/five.webp" }
     ]
   },
   "en-lesson13": {
     title: "Lesson 13: Time",
     nextPage: "lesson13.html",
     words: [
-      { en: "today", fa: "امروز", image: "../../media/time/today.png" },
-      { en: "tomorrow", fa: "فردا", image: "../../media/time/tomorrow.png" },
-      { en: "yesterday", fa: "دیروز", image: "../../media/time/yesterday.png" },
-      { en: "morning", fa: "صبح", image: "../../media/time/morning.png" },
-      { en: "night", fa: "شب", image: "../../media/time/night.png" }
+      { en: "today", fa: "امروز", image: "../../media/time/today.webp" },
+      { en: "tomorrow", fa: "فردا", image: "../../media/time/tomorrow.webp" },
+      { en: "yesterday", fa: "دیروز", image: "../../media/time/yesterday.webp" },
+      { en: "morning", fa: "صبح", image: "../../media/time/morning.webp" },
+      { en: "night", fa: "شب", image: "../../media/time/night.webp" }
     ]
   },
   "en-lesson14": {
     title: "Lesson 14: Jobs",
     nextPage: "lesson14.html",
     words: [
-      { en: "teacher", fa: "معلم", image: "../../media/jobs/teacher.png" },
-      { en: "doctor", fa: "دکتر", image: "../../media/jobs/doctor.png" },
-      { en: "engineer", fa: "مهندس", image: "../../media/jobs/engineer.png" },
-      { en: "student", fa: "دانش‌آموز", image: "../../media/jobs/student.png" },
-      { en: "driver", fa: "راننده", image: "../../media/jobs/driver.png" }
+      { en: "teacher", fa: "معلم", image: "../../media/jobs/teacher.webp" },
+      { en: "doctor", fa: "دکتر", image: "../../media/jobs/doctor.webp" },
+      { en: "engineer", fa: "مهندس", image: "../../media/jobs/engineer.webp" },
+      { en: "student", fa: "دانش‌آموز", image: "../../media/jobs/student.webp" },
+      { en: "driver", fa: "راننده", image: "../../media/jobs/driver.webp" }
     ]
   },
   "en-lesson15": {
     title: "Lesson 15: Vehicles",
     nextPage: "lesson15.html",
     words: [
-      { en: "car", fa: "ماشین", image: "../../media/vehicles/car.png" },
-      { en: "bus", fa: "اتوبوس", image: "../../media/vehicles/bus.png" },
-      { en: "train", fa: "قطار", image: "../../media/vehicles/train.png" },
-      { en: "airplane", fa: "هواپیما", image: "../../media/vehicles/airplane.png" },
-      { en: "bicycle", fa: "دوچرخه", image: "../../media/vehicles/bicycle.png" }
+      { en: "car", fa: "ماشین", image: "../../media/vehicles/car.webp" },
+      { en: "bus", fa: "اتوبوس", image: "../../media/vehicles/bus.webp" },
+      { en: "train", fa: "قطار", image: "../../media/vehicles/train.webp" },
+      { en: "airplane", fa: "هواپیما", image: "../../media/vehicles/airplane.webp" },
+      { en: "bicycle", fa: "دوچرخه", image: "../../media/vehicles/bicycle.webp" }
     ]
   },
   "en-lesson16": {
     title: "Lesson 16: Places",
     nextPage: "lesson16.html",
     words: [
-      { en: "school", fa: "مدرسه", image: "../../media/places/school.png" },
-      { en: "hospital", fa: "بیمارستان", image: "../../media/places/hospital.png" },
-      { en: "store", fa: "فروشگاه", image: "../../media/places/store.png" },
-      { en: "park", fa: "پارک", image: "../../media/places/park.png" },
-      { en: "mosque", fa: "مسجد", image: "../../media/places/mosque.png" }
+      { en: "school", fa: "مدرسه", image: "../../media/places/school.webp" },
+      { en: "hospital", fa: "بیمارستان", image: "../../media/places/hospital.webp" },
+      { en: "store", fa: "فروشگاه", image: "../../media/places/store.webp" },
+      { en: "park", fa: "پارک", image: "../../media/places/park.webp" },
+      { en: "mosque", fa: "مسجد", image: "../../media/places/mosque.webp" }
     ]
   },
   "en-lesson17": {
     title: "Lesson 17: Feelings",
     nextPage: "lesson17.html",
     words: [
-      { en: "happy", fa: "خوشحال", image: "../../media/feelings/happy.png" },
-      { en: "sad", fa: "ناراحت", image: "../../media/feelings/sad.png" },
-      { en: "angry", fa: "عصبانی", image: "../../media/feelings/angry.png" },
-      { en: "tired", fa: "خسته", image: "../../media/feelings/tired.png" },
-      { en: "hungry", fa: "گرسنه", image: "../../media/feelings/hungry.png" }
+      { en: "happy", fa: "خوشحال", image: "../../media/feelings/happy.webp" },
+      { en: "sad", fa: "ناراحت", image: "../../media/feelings/sad.webp" },
+      { en: "angry", fa: "عصبانی", image: "../../media/feelings/angry.webp" },
+      { en: "tired", fa: "خسته", image: "../../media/feelings/tired.webp" },
+      { en: "hungry", fa: "گرسنه", image: "../../media/feelings/hungry.webp" }
     ]
   },
   "en-lesson18": {
     title: "Lesson 18: Daily Activities",
     nextPage: "lesson18.html",
     words: [
-      { en: "eat", fa: "خوردن", image: "../../media/actions/eat.png" },
-      { en: "sleep", fa: "خوابیدن", image: "../../media/actions/sleep.png" },
-      { en: "walk", fa: "راه رفتن", image: "../../media/actions/walk.png" },
-      { en: "read", fa: "خواندن", image: "../../media/actions/read.png" },
-      { en: "write", fa: "نوشتن", image: "../../media/actions/write.png" }
+      { en: "eat", fa: "خوردن", image: "../../media/actions/eat.webp" },
+      { en: "sleep", fa: "خوابیدن", image: "../../media/actions/sleep.webp" },
+      { en: "walk", fa: "راه رفتن", image: "../../media/actions/walk.webp" },
+      { en: "read", fa: "خواندن", image: "../../media/actions/read.webp" },
+      { en: "write", fa: "نوشتن", image: "../../media/actions/write.webp" }
     ]
   },
   "en-lesson19": {
     title: "Lesson 19: Adjectives",
     nextPage: "lesson19.html",
     words: [
-      { en: "big", fa: "بزرگ", image: "../../media/adjectives/big.png" },
-      { en: "small", fa: "کوچک", image: "../../media/adjectives/small.png" },
-      { en: "tall", fa: "بلند", image: "../../media/adjectives/tall.png" },
-      { en: "short", fa: "کوتاه", image: "../../media/adjectives/short.png" },
-      { en: "beautiful", fa: "زیبا", image: "../../media/adjectives/beautiful.png" }
+      { en: "big", fa: "بزرگ", image: "../../media/adjectives/big.webp" },
+      { en: "small", fa: "کوچک", image: "../../media/adjectives/small.webp" },
+      { en: "tall", fa: "بلند", image: "../../media/adjectives/tall.webp" },
+      { en: "short", fa: "کوتاه", image: "../../media/adjectives/short.webp" },
+      { en: "beautiful", fa: "زیبا", image: "../../media/adjectives/beautiful.webp" }
     ]
   },
   "en-lesson20": {
     title: "Lesson 20: Questions",
     nextPage: "lesson20.html",
     words: [
-      { en: "who", fa: "چه کسی", image: "../../media/questions/who.png" },
-      { en: "what", fa: "چه", image: "../../media/questions/what.png" },
-      { en: "where", fa: "کجا", image: "../../media/questions/where.png" },
-      { en: "when", fa: "کی", image: "../../media/questions/when.png" },
-      { en: "why", fa: "چرا", image: "../../media/questions/why.png" }
+      { en: "who", fa: "چه کسی", image: "../../media/questions/who.webp" },
+      { en: "what", fa: "چه", image: "../../media/questions/what.webp" },
+      { en: "where", fa: "کجا", image: "../../media/questions/where.webp" },
+      { en: "when", fa: "کی", image: "../../media/questions/when.webp" },
+      { en: "why", fa: "چرا", image: "../../media/questions/why.webp" }
     ]
   }
 };

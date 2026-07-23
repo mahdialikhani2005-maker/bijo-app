@@ -64,10 +64,10 @@ type:"image",
 question:"man کدام است؟",
 speak:"man",
 options:[
-{text:"woman",image:"../../media/people/woman.png"},
-{text:"man",image:"../../media/people/man.png"},
-{text:"boy",image:"../../media/people/boy.png"},
-{text:"girl",image:"../../media/people/girl.png"}
+{text:"woman",image:"../../media/people/woman.webp"},
+{text:"man",image:"../../media/people/man.webp"},
+{text:"boy",image:"../../media/people/boy.webp"},
+{text:"girl",image:"../../media/people/girl.webp"}
 ],
 answer:"man"
 },
@@ -77,10 +77,10 @@ type:"image",
 question:"woman کدام است؟",
 speak:"woman",
 options:[
-{text:"girl",image:"../../media/people/girl.png"},
-{text:"woman",image:"../../media/people/woman.png"},
-{text:"boy",image:"../../media/people/boy.png"},
-{text:"man",image:"../../media/people/man.png"}
+{text:"girl",image:"../../media/people/girl.webp"},
+{text:"woman",image:"../../media/people/woman.webp"},
+{text:"boy",image:"../../media/people/boy.webp"},
+{text:"man",image:"../../media/people/man.webp"}
 ],
 answer:"woman"
 },
@@ -90,10 +90,10 @@ type:"image",
 question:"boy کدام است؟",
 speak:"boy",
 options:[
-{text:"man",image:"../../media/people/man.png"},
-{text:"boy",image:"../../media/people/boy.png"},
-{text:"baby",image:"../../media/people/baby.png"},
-{text:"girl",image:"../../media/people/girl.png"}
+{text:"man",image:"../../media/people/man.webp"},
+{text:"boy",image:"../../media/people/boy.webp"},
+{text:"baby",image:"../../media/people/baby.webp"},
+{text:"girl",image:"../../media/people/girl.webp"}
 ],
 answer:"boy"
 },
@@ -103,10 +103,10 @@ type:"image",
 question:"girl کدام است؟",
 speak:"girl",
 options:[
-{text:"boy",image:"../../media/people/boy.png"},
-{text:"man",image:"../../media/people/man.png"},
-{text:"girl",image:"../../media/people/girl.png"},
-{text:"baby",image:"../../media/people/baby.png"}
+{text:"boy",image:"../../media/people/boy.webp"},
+{text:"man",image:"../../media/people/man.webp"},
+{text:"girl",image:"../../media/people/girl.webp"},
+{text:"baby",image:"../../media/people/baby.webp"}
 ],
 answer:"girl"
 },
@@ -116,10 +116,10 @@ type:"image",
 question:"baby کدام است؟",
 speak:"baby",
 options:[
-{text:"girl",image:"../../media/people/girl.png"},
-{text:"boy",image:"../../media/people/boy.png"},
-{text:"man",image:"../../media/people/man.png"},
-{text:"baby",image:"../../media/people/baby.png"}
+{text:"girl",image:"../../media/people/girl.webp"},
+{text:"boy",image:"../../media/people/boy.webp"},
+{text:"man",image:"../../media/people/man.webp"},
+{text:"baby",image:"../../media/people/baby.webp"}
 ],
 answer:"baby"
 },
@@ -129,7 +129,7 @@ answer:"baby"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/people/man.png",
+image:"../../media/people/man.webp",
 options:["boy","man","woman","girl"],
 answer:"man"
 },
@@ -137,7 +137,7 @@ answer:"man"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/people/woman.png",
+image:"../../media/people/woman.webp",
 options:["woman","girl","baby","man"],
 answer:"woman"
 },
@@ -145,7 +145,7 @@ answer:"woman"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/people/boy.png",
+image:"../../media/people/boy.webp",
 options:["boy","man","baby","girl"],
 answer:"boy"
 },
@@ -153,7 +153,7 @@ answer:"boy"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/people/girl.png",
+image:"../../media/people/girl.webp",
 options:["girl","woman","boy","baby"],
 answer:"girl"
 },
@@ -161,7 +161,7 @@ answer:"girl"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/people/baby.png",
+image:"../../media/people/baby.webp",
 options:["baby","boy","girl","man"],
 answer:"baby"
 },
@@ -447,7 +447,6 @@ shuffleArray(q.words).forEach(w => {
     checkBuild(userWords, q.answer);
   }
 };
-
 
     optionsBox.appendChild(tile);
   });
