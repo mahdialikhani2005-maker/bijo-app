@@ -311,4 +311,22 @@ function renderIntro() {
   });
 }
 
-window.onload = renderIntro;
+async function initIntroPage() {
+  const lesson = allLessons[lessonId];
+  const loadingEl = document.getElementById("lesson-loading");
+
+  if (lesson) {
+    if (loadingEl) loadingEl.style.display = "flex";
+    try {
+      const urls = getLessonAssetUrls(lesson);
+      await window.downloadLesson(lessonId, urls);
+    } catch (err) {
+      console.warn("دانلود اولیه‌ی درس ناموفق بود:", err);
+    }
+    if (loadingEl) loadingEl.style.display = "none";
+  }
+
+  renderIntro();
+}
+
+window.onload = initIntroPage;

@@ -1,5 +1,10 @@
 // lessonDownloader.js
-// مسئول دانلود و کش کردن فایل‌های هر درس رو خودِ گوشی/مرورگر کاربر
+// مسئول دانلود و کش کردن فایل‌های هر درس رو خودِ گوشی کاربر.
+// فایل‌های درس‌ها (HTML/JS/عکس) دیگه داخل خودِ اپ بسته‌بندی نمیشن؛
+// این فایل اونا رو از روی سایت زنده (گیت‌هاب پیجز) دانلود می‌کنه.
+//
+// ⚠️ وقتی بعداً یه سرور دائمی/واقعی گرفتی، فقط همین یه خط رو عوض کن:
+const REMOTE_BASE = "https://mahdialikhani2005-maker.github.io/bijo-app";
 
 const LESSON_CACHE_NAME = "bijo-lessons-v2";
 
@@ -11,7 +16,16 @@ function markLessonDownloaded(lessonId) {
   localStorage.setItem(`lesson_downloaded_${LESSON_CACHE_NAME}_${lessonId}`, "1");
 }
 
-async function downloadLesson(lessonId, urls) {
+// یه مسیر نسبی (مثل "lesson1.js" یا "../../media/x.png") رو به دو
+// چیز تبدیل می‌کنه: آدرس محلی (که اپ باهاش صداش می‌زنه) و آدرس واقعی
+// رو گیت‌هاب پیجز (که ازش دانلود می‌کنیم)
+function resolveUrls(relativePath) {
+  const localUrlObj = new URL(relativePath, window.location.href);
+  const remoteUrl = REMOTE_BASE + localUrlObj.pathname;
+  return { localUrl: localUrlObj.href, remoteUrl };
+}
+
+async function downloadLesson(lessonId, relativeUrls) {
   if (isLessonDownloaded(lessonId)) return;
 
   if (!("caches" in window)) return;
@@ -19,26 +33,27 @@ async function downloadLesson(lessonId, urls) {
   const cache = await caches.open(LESSON_CACHE_NAME);
 
   const results = await Promise.all(
-    urls.map(async (url) => {
+    relativeUrls.map(async (relativePath) => {
       try {
-        const already = await cache.match(url);
+        const { localUrl, remoteUrl } = resolveUrls(relativePath);
+
+        const already = await cache.match(localUrl);
         if (already) return true;
 
-        const res = await fetch(url);
+        const res = await fetch(remoteUrl);
         if (res.ok) {
-          await cache.put(url, res.clone());
+          await cache.put(localUrl, res.clone());
           return true;
         }
-        console.warn("دانلود این فایل ناموفق بود (status):", url, res.status);
+        console.warn("دانلود این فایل ناموفق بود (status):", remoteUrl, res.status);
         return false;
       } catch (err) {
-        console.warn("دانلود این فایل ناموفق بود:", url, err);
+        console.warn("دانلود این فایل ناموفق بود:", relativePath, err);
         return false;
       }
     })
   );
 
-  // فقط اگه واقعاً همه‌ی فایل‌ها با موفقیت دانلود/کش شدن، علامت بزن
   const allSucceeded = results.every(r => r === true);
   if (allSucceeded) {
     markLessonDownloaded(lessonId);
@@ -61,7 +76,6 @@ async function startLessonWithDownload(lessonId, urls, nextPage, loadingElementI
     console.error("خطا در دانلود درس:", err);
   }
 
-  // حتی اگه دانلود کامل نشد، بذار کاربر بره تو درس (آنلاین لود میشه)
   window.location.href = nextPage;
 }
 

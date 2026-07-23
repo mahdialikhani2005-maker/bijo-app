@@ -448,6 +448,7 @@ shuffleArray(q.words).forEach(w => {
   }
 };
 
+
     optionsBox.appendChild(tile);
   });
 }
