@@ -8,13 +8,14 @@ from fastapi.responses import FileResponse
 from app.database import engine, Base
 
 # Import models
-from app.models import user, heart, progress, premium, subscription
+from app.models import user, heart, progress, premium, subscription, lesson, word
 
 # Import routes
 from app.routes import auth
 from app.routes import progress as progress_routes
 from app.routes import heart as heart_routes
 from app.routes import premium as premium_routes
+from app.routes import review as review_routes
 
 # ساخت جداول دیتابیس
 Base.metadata.create_all(bind=engine)
@@ -41,6 +42,7 @@ app.include_router(auth.router, prefix="/api")
 app.include_router(progress_routes.router, prefix="/api")
 app.include_router(heart_routes.router, prefix="/api")
 app.include_router(premium_routes.router, prefix="/api")
+app.include_router(review_routes.router, prefix="/api")
 
 # -------------------------
 # Health Check

@@ -1,11 +1,16 @@
 /* courseRouter.js
    مسئول:
-   - تعیین کورس فعال (english/french)
+   - تعیین کورس فعال (english/french/...)
    - هماهنگ کردن userLang و currentCourse
-   - پویا کردن لینک‌های bottom bar
+   - وایر کردن نب‌بار مشترک همه‌ی صفحات (خونه، مرور، پروفایل، پیشرفت، درس)
 */
 
 const STORAGE_KEY = "duolingo_app_data"; // مطابق dataStorage.js
+
+const SUPPORTED_COURSES = [
+  "english", "french", "spanish", "german", "italian",
+  "turkish", "arabic", "russian", "japanese", "korean", "chinese"
+];
 
 function getAllDataSafe() {
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -24,22 +29,24 @@ function saveAllDataSafe(data) {
 /** گرفتن کورس فعلی از dataStorage (منبع اصلی) */
 export function getCurrentCourse() {
   const data = getAllDataSafe();
-  return (data && data.currentCourse) ? data.currentCourse : "english";
+  if (data && data.currentCourse) return data.currentCourse;
+
+  // اگه هنوز چیزی ست نشده، از userLang هم می‌تونیم بخونیم (سازگاری قدیمی)
+  const fromUserLang = localStorage.getItem("userLang");
+  if (fromUserLang && SUPPORTED_COURSES.includes(fromUserLang)) return fromUserLang;
+
+  return "english";
 }
 
 /** ست کردن کورس فعلی + همگام‌سازی userLang */
 export function setCurrentCourse(course) {
-  const normalized = (course === "french") ? "french" : "english";
+  const normalized = SUPPORTED_COURSES.includes(course) ? course : "english";
 
   let data = getAllDataSafe();
   if (!data) {
-    // اگر هنوز duolingo_app_data ساخته نشده، یک اسکلت حداقلی درست می‌کنیم
     data = {
       global: { hearts: 5, streak: 0, lastHeartUpdate: null },
-      courses: {
-        english: { xp: 0, lessonsCompleted: 0, learnedWords: [] },
-        french: { xp: 0, lessonsCompleted: 0, learnedWords: [] }
-      },
+      courses: {},
       currentCourse: "english"
     };
   }
@@ -47,49 +54,65 @@ export function setCurrentCourse(course) {
   data.currentCourse = normalized;
   saveAllDataSafe(data);
 
-  // همگام‌سازی با languageManager.js
+  // همگام‌سازی با dataStorage.js / review.js
   localStorage.setItem("userLang", normalized);
 }
 
 /**
- * پویا کردن لینک‌های bottom bar
- * انتظار: در HTML لینک‌ها id داشته باشند:
- *  - #nav-home
- *  - #nav-progress
- *  - #nav-profile
+ * وایر کردن نب‌بار مشترک.
+ * انتظار: تو HTML این ۵ آیدی وجود داشته باشن (هر چندتاش که تو اون صفحه هست):
+ *  #nav-lesson   -> <course>/index.html      (لیست درس‌ها)
+ *  #nav-review   -> /review.html             (مرور)
+ *  #nav-home     -> /home.html               (انتخاب زبان)
+ *  #nav-progress -> <course>/progress.html   (آمار XP/دل)
+ *  #nav-profile  -> /profile.html            (پروفایل)
+ *
+ * همه‌ی مسیرها absolute (شروع با /) هستن، پس فرقی نمی‌کنه صفحه‌ی فعلی
+ * چقدر تو دایرکتوری‌ها عمیق باشه (home.html, english/index.html, ...).
  */
 export function wireBottomNav() {
-  const home = document.querySelector("#nav-home");
-  const progress = document.querySelector("#nav-progress");
-  const profile = document.querySelector("#nav-profile");
+  const course = getCurrentCourse();
 
-  if (!home || !progress || !profile) return;
+  const nav = {
+    lesson: document.querySelector("#nav-lesson"),
+    review: document.querySelector("#nav-review"),
+    home: document.querySelector("#nav-home"),
+    progress: document.querySelector("#nav-progress"),
+    profile: document.querySelector("#nav-profile")
+  };
 
-  // ما لینک‌ها را ثابت می‌گذاریم و مقصدها را "صفحات مشترک" می‌کنیم
-  // چون خود صفحات بر اساس currentCourse رندر می‌شوند.
-  home.setAttribute("href", "index.html");
-  progress.setAttribute("href", "progress.html");
-  profile.setAttribute("href", "profile.html");
+  if (nav.lesson) nav.lesson.setAttribute("href", `/${course}/index.html`);
+  if (nav.progress) nav.progress.setAttribute("href", `/${course}/progress.html`);
+  if (nav.review) nav.review.setAttribute("href", "/review.html");
+  if (nav.home) nav.home.setAttribute("href", "/home.html");
+  if (nav.profile) nav.profile.setAttribute("href", "/profile.html");
 
-  // (اختیاری) فعال کردن آیتم صفحه فعلی
+  // فعال کردن آیتم صفحه‌ی فعلی
+  Object.values(nav).forEach((el) => el && el.classList.remove("active"));
+
   const path = (location.pathname.split("/").pop() || "").toLowerCase();
 
-  // پاک کردن active
-  [home, progress, profile].forEach(a => a.classList.remove("active"));
-
-  if (path.includes("progress")) progress.classList.add("active");
-  else if (path.includes("profile")) profile.classList.add("active");
-  else home.classList.add("active");
+  if (path === "review.html") {
+    nav.review && nav.review.classList.add("active");
+  } else if (path === "home.html" || path === "") {
+    nav.home && nav.home.classList.add("active");
+  } else if (path === "profile.html") {
+    nav.profile && nav.profile.classList.add("active");
+  } else if (path === "progress.html") {
+    nav.progress && nav.progress.classList.add("active");
+  } else if (path === "index.html") {
+    nav.lesson && nav.lesson.classList.add("active");
+  }
 }
 
 /**
- * وقتی وارد صفحه‌ای می‌شویم که "وابسته به کورس" است (مثلا lesson های فرانسوی)
+ * وقتی وارد صفحه‌ای می‌شویم که "وابسته به کورس" است (مثلا لیست درس‌های فرانسوی)
  * می‌توانیم از طریق query مثل ?course=french کورس را ست کنیم.
  */
 export function applyCourseFromQuery() {
   const params = new URLSearchParams(location.search);
   const course = params.get("course");
-  if (course === "english" || course === "french") {
+  if (course && SUPPORTED_COURSES.includes(course)) {
     setCurrentCourse(course);
   }
 }

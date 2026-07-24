@@ -246,6 +246,80 @@ async function refreshUserStats() {
 }
 
 // ======================
+// LESSON COMPLETION
+// ======================
+
+// words: [{ term, translation }, ...] — دقیقاً همون آرایه‌ای که تو
+// intro.js زیر allLessons[lessonId].words هست (فیلدهای en/fa رو به
+// term/translation نگاشت بده). بک‌اند خودش کلمات جدید رو می‌سازه
+// (upsert روی course_slug+term)، نیازی به seed از قبل نیست.
+async function completeLesson(courseSlug, lessonSlug, words = []) {
+  if (!isLoggedIn()) return null;
+
+  try {
+    return await apiRequest(`${API_BASE}/progress/lesson-complete`, {
+      method: "POST",
+      body: JSON.stringify({
+        course_slug: courseSlug,
+        lesson_slug: lessonSlug,
+        words
+      })
+    });
+  } catch (err) {
+    console.error("خطا در ثبت اتمام درس:", err);
+    return null;
+  }
+}
+
+// ======================
+// REVIEW
+// ======================
+
+// فقط کلماتی که کاربر تو همین دوره (courseSlug) یاد گرفته برمی‌گرده —
+// مرور دوره‌های مختلف با هم قاطی نمیشه
+async function fetchReviewWords(courseSlug, count = 20) {
+  if (!isLoggedIn()) return [];
+
+  try {
+    return await apiRequest(`${API_BASE}/review/words?course_slug=${encodeURIComponent(courseSlug)}&count=${count}`, {
+      method: "GET"
+    });
+  } catch (err) {
+    console.error("خطا در گرفتن کلمات مرور:", err);
+    return [];
+  }
+}
+
+// نکته‌ی مهم: این تابع را فقط از صفحه‌ی مرور صدا بزن، هیچ‌وقت loseHeart()
+// را در صفحه‌ی مرور فراخوانی نکن — جواب غلط در مرور دل کم نمی‌کند.
+async function submitReviewAnswers(wordIds) {
+  if (!isLoggedIn()) return { hearts_earned: 0, heart_count: getHearts() };
+
+  try {
+    const data = await apiRequest(`${API_BASE}/review/submit`, {
+      method: "POST",
+      body: JSON.stringify({ word_ids: wordIds })
+    });
+    heartsCache = data.heart_count;
+    return data;
+  } catch (err) {
+    console.error("خطا در ثبت نتیجه‌ی مرور:", err);
+    return { hearts_earned: 0, heart_count: getHearts() };
+  }
+}
+
+async function getReviewStatus() {
+  if (!isLoggedIn()) return { can_earn_heart: false, seconds_until_next_reward: null };
+
+  try {
+    return await apiRequest(`${API_BASE}/review/status`, { method: "GET" });
+  } catch (err) {
+    console.error("خطا در گرفتن وضعیت مرور:", err);
+    return { can_earn_heart: false, seconds_until_next_reward: null };
+  }
+}
+
+// ======================
 // INIT
 // ======================
 
@@ -292,8 +366,15 @@ window.buyPremium = buyPremium;
 window.getHearts = getHearts;
 window.loseHeart = loseHeart;
 window.fetchHearts = fetchHearts;
+window.checkAndRegenHearts = checkAndRegenHearts;
+window.getTimeUntilNextHeart = getTimeUntilNextHeart;
 
 window.addXP = addXP;
 window.fetchXP = fetchXP;
 window.getTotalXP = getTotalXP;
 window.refreshUserStats = refreshUserStats;
+
+window.completeLesson = completeLesson;
+window.fetchReviewWords = fetchReviewWords;
+window.submitReviewAnswers = submitReviewAnswers;
+window.getReviewStatus = getReviewStatus;

@@ -17,6 +17,7 @@ display:flex;
 justify-content:center;
 align-items:center;
 min-height:100vh;
+padding-bottom:64px; /* جا برای نب‌بار ثابت */
 }
 
 .profile-card{
@@ -96,6 +97,22 @@ background:#ff4d4f;
 color:white;
 }
 
+/* نب‌بار مشترک: این استایل رو بعداً می‌تونی ببری تو style.css */
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 150; }
+.bottom-nav-inner {
+  direction: ltr;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: white;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
+  padding: 10px 0;
+}
+.bottom-nav .nav-item { opacity: 0.45; text-decoration: none; display: flex; align-items: center; justify-content: center; }
+.bottom-nav .nav-item.active { opacity: 1; }
+.bottom-nav .nav-item img { width: 26px; height: 26px; }
+.bottom-nav .nav-item .nav-icon-emoji { font-size: 22px; }
+
 </style>
 </head>
 
@@ -132,11 +149,31 @@ color:white;
 خروج از حساب
 </button>
 
-<button class="btn" onclick="window.location.href='home.html'" style="background:#1cb0f6; box-shadow:0 4px 0 #1899d6; color:white;">
-بازگشت به خانه
-</button>
-
 </div>
+
+<!-- نب‌بار مشترک: درس | مرور | خونه | پیشرفت | پروفایل -->
+<footer class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <a href="#" id="nav-lesson" class="nav-item">
+      <img src="/assets/icons/lesson.png" alt="درس">
+    </a>
+    <a href="#" id="nav-review" class="nav-item">
+      <span class="nav-icon-emoji">🔁</span>
+    </a>
+    <a href="#" id="nav-home" class="nav-item">
+      <span class="nav-icon-emoji">🏠</span>
+    </a>
+    <a href="#" id="nav-progress" class="nav-item">
+      <img src="/assets/icons/progress.png" alt="پیشرفت">
+    </a>
+    <a href="#" id="nav-profile" class="nav-item active">
+      <img src="/assets/icons/profile.png" alt="پروفایل">
+    </a>
+  </div>
+</footer>
+
+<script src="courseRouter.js" type="module"></script>
+
 <script>
 
 function loadProfile(){
@@ -145,7 +182,7 @@ function loadProfile(){
         window.location.href="auth.html";
         return;
     }
-    
+
     const user = JSON.parse(saved);
 
     document.getElementById("name").textContent = user.full_name || "کاربر";

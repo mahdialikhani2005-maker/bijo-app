@@ -7,6 +7,11 @@ class Lesson(Base):
     __tablename__ = "lessons"
 
     id = Column(Integer, primary_key=True, index=True)
+
+    # مال کدوم دوره است: "english", "french", "german", ...
+    # قبلاً این فیلد وجود نداشت و لازم بود اضافه بشه
+    course_slug = Column(String(50), nullable=False, index=True)
+
     title = Column(String(255), nullable=False)
     slug = Column(String(100), unique=True, nullable=False, index=True)
     is_premium = Column(Boolean, default=False, nullable=False)
