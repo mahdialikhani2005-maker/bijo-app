@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -31,7 +31,7 @@ def _apply_passive_regen(heart: Heart) -> None:
         heart.last_heart_update = None
         return
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     if heart.last_heart_update is None:
         # اولین باریه که قلب کم شده، از همین لحظه شمارش شروع میشه
@@ -59,7 +59,7 @@ def _seconds_until_next_heart(heart: Heart) -> int | None:
         return None
 
     regen_interval = timedelta(hours=HEART_REGEN_HOURS)
-    elapsed = datetime.utcnow() - heart.last_heart_update
+    elapsed = datetime.now(timezone.utc) - heart.last_heart_update
     remaining = regen_interval - elapsed
 
     return max(0, int(remaining.total_seconds()))
@@ -109,7 +109,7 @@ def decrease_heart(
 
     # اگه این اولین قلبیه که از سقف کم میشه، شمارش رشد زمانی رو شروع کن
     if heart.last_heart_update is None:
-        heart.last_heart_update = datetime.utcnow()
+        heart.last_heart_update = datetime.now(timezone.utc)
 
     db.commit()
     db.refresh(heart)

@@ -1,5 +1,5 @@
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -81,7 +81,7 @@ def submit_review(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     # آپدیت آمار مرور برای هر کلمه (جواب غلط هم باشه، مرور شدن ثبت میشه؛
     # قلب هیچ‌وقت اینجا کم نمیشه)
@@ -137,7 +137,7 @@ def review_status(
     if heart.last_review_reward_at is None:
         return {"can_earn_heart": True, "seconds_until_next_reward": 0}
 
-    elapsed = datetime.utcnow() - heart.last_review_reward_at
+    elapsed = datetime.now(timezone.utc) - heart.last_review_reward_at
     remaining = reward_interval - elapsed
 
     if remaining.total_seconds() <= 0:
