@@ -2,6 +2,21 @@ let current = 0;
 let xp = 0;
 
 function speak(text){
+  // اگه داخل اپ موبایل (Capacitor) اجرا میشه، از موتور صدای خودِ اندروید استفاده کن
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    try {
+      window.Capacitor.Plugins.TextToSpeech.speak({
+        text: text,
+        lang: "en-US",
+        rate: 0.9,
+        category: "ambient"
+      });
+    } catch (err) {
+      console.warn("خطا در پخش صدا (native):", err);
+    }
+    return;
+  }
+
   if (!window.speechSynthesis) return;
 
   const utter = new SpeechSynthesisUtterance(text);
@@ -12,25 +27,34 @@ function speak(text){
   speechSynthesis.speak(utter);
 }
 
-window.onload = function() {
-  if (typeof checkAndRegenHearts === 'function') {
-  checkAndRegenHearts();
+window.onload = async function() {
+  // قبل از هر چیز، اطلاعات واقعی کاربر (قلب، XP) رو از سرور می‌گیریم
+  if (typeof initUserData === "function") {
+    try {
+      await initUserData();
+    } catch (err) {
+      console.warn("گرفتن اطلاعات کاربر ناموفق بود:", err);
+    }
+  }
+
+  updateHeartDisplay();
+
+  if (typeof getHearts === "function" && getHearts() <= 0) {
+    alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
+    window.location.href = "../home.html";
+    return;
+  }
+
+  showQuestion();
+};
+
+function updateHeartDisplay() {
+  const heartElement = document.getElementById("heart-count");
+  if (heartElement && typeof getHearts === "function") {
+    heartElement.textContent = getHearts();
+  }
 }
 
-    if (typeof getHearts === 'function') {
-        const currentHearts = getHearts();
-        const heartElement = document.getElementById("heart-count");
-        if (heartElement) {
-            heartElement.textContent = currentHearts;
-        }
-        
-        // اگر قلب کاربر 0 بود، اجازه شروع درس را نده (اختیاری)
-        if (currentHearts <= 0) {
-            alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
-            window.location.href = "../home.html";
-        }
-    }
-};
 const questions = [
 
 /* IMAGE */
@@ -40,10 +64,10 @@ type:"image",
 question:"head کدام است؟",
 speak:"head",
 options:[
-{text:"hand",image:"../../media/body/hand.png"},
-{text:"head",image:"../../media/body/head.png"},
-{text:"eye",image:"../../media/body/eye.png"},
-{text:"nose",image:"../../media/body/nose.png"}
+{text:"hand",image:"../../media/body/hand.webp"},
+{text:"head",image:"../../media/body/head.webp"},
+{text:"eye",image:"../../media/body/eye.webp"},
+{text:"nose",image:"../../media/body/nose.webp"}
 ],
 answer:"head"
 },
@@ -53,10 +77,10 @@ type:"image",
 question:"hand کدام است؟",
 speak:"hand",
 options:[
-{text:"eye",image:"../../media/body/eye.png"},
-{text:"hand",image:"../../media/body/hand.png"},
-{text:"foot",image:"../../media/body/foot.png"},
-{text:"head",image:"../../media/body/head.png"}
+{text:"eye",image:"../../media/body/eye.webp"},
+{text:"hand",image:"../../media/body/hand.webp"},
+{text:"foot",image:"../../media/body/foot.webp"},
+{text:"head",image:"../../media/body/head.webp"}
 ],
 answer:"hand"
 },
@@ -66,10 +90,10 @@ type:"image",
 question:"eye کدام است؟",
 speak:"eye",
 options:[
-{text:"head",image:"../../media/body/head.png"},
-{text:"eye",image:"../../media/body/eye.png"},
-{text:"nose",image:"../../media/body/nose.png"},
-{text:"hand",image:"../../media/body/hand.png"}
+{text:"head",image:"../../media/body/head.webp"},
+{text:"eye",image:"../../media/body/eye.webp"},
+{text:"nose",image:"../../media/body/nose.webp"},
+{text:"hand",image:"../../media/body/hand.webp"}
 ],
 answer:"eye"
 },
@@ -79,10 +103,10 @@ type:"image",
 question:"foot کدام است؟",
 speak:"foot",
 options:[
-{text:"hand",image:"../../media/body/hand.png"},
-{text:"head",image:"../../media/body/head.png"},
-{text:"foot",image:"../../media/body/foot.png"},
-{text:"eye",image:"../../media/body/eye.png"}
+{text:"hand",image:"../../media/body/hand.webp"},
+{text:"head",image:"../../media/body/head.webp"},
+{text:"foot",image:"../../media/body/foot.webp"},
+{text:"eye",image:"../../media/body/eye.webp"}
 ],
 answer:"foot"
 },
@@ -92,10 +116,10 @@ type:"image",
 question:"nose کدام است؟",
 speak:"nose",
 options:[
-{text:"eye",image:"../../media/body/eye.png"},
-{text:"nose",image:"../../media/body/nose.png"},
-{text:"head",image:"../../media/body/head.png"},
-{text:"hand",image:"../../media/body/hand.png"}
+{text:"eye",image:"../../media/body/eye.webp"},
+{text:"nose",image:"../../media/body/nose.webp"},
+{text:"head",image:"../../media/body/head.webp"},
+{text:"hand",image:"../../media/body/hand.webp"}
 ],
 answer:"nose"
 },
@@ -105,7 +129,7 @@ answer:"nose"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/body/head.png",
+image:"../../media/body/head.webp",
 options:["hand","head","eye","nose"],
 answer:"head"
 },
@@ -113,7 +137,7 @@ answer:"head"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/body/hand.png",
+image:"../../media/body/hand.webp",
 options:["eye","hand","foot","head"],
 answer:"hand"
 },
@@ -121,7 +145,7 @@ answer:"hand"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/body/eye.png",
+image:"../../media/body/eye.webp",
 options:["head","eye","nose","hand"],
 answer:"eye"
 },
@@ -129,7 +153,7 @@ answer:"eye"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/body/foot.png",
+image:"../../media/body/foot.webp",
 options:["hand","foot","head","eye"],
 answer:"foot"
 },
@@ -137,7 +161,7 @@ answer:"foot"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/body/nose.png",
+image:"../../media/body/nose.webp",
 options:["eye","nose","hand","head"],
 answer:"nose"
 },
@@ -280,13 +304,12 @@ answer:["این","بینی","من","است"]
 
 ];
 
+
 // =====================================
 // نمایش سوال
 // =====================================
-    // اضافه کردن XP کسب شده به دیتابیس پروفایل در پایان درس
 
-
-    function showQuestion() {
+function showQuestion() {
   if (current >= questions.length) {
     const finalXP = typeof getTotalXP === "function" ? getTotalXP() : xp;
 
@@ -310,6 +333,17 @@ answer:["این","بینی","من","است"]
   const content = document.getElementById("question-content");
   const optionsBox = document.getElementById("options");
   const wordBuilder = document.getElementById("word-builder");
+  const repeatBtn = document.getElementById("repeat-audio-btn");
+
+  if (repeatBtn) {
+    if (q.speak) {
+      repeatBtn.style.display = "inline-block";
+      repeatBtn.onclick = () => speak(q.speak);
+    } else {
+      repeatBtn.style.display = "none";
+      repeatBtn.onclick = null;
+    }
+  }
 
   title.innerText = q.question;
   content.innerHTML = "";
@@ -317,7 +351,6 @@ answer:["این","بینی","من","است"]
   wordBuilder.innerHTML = "";
 wordBuilder.classList.add("hidden");
 
-  // IMAGE SELECTION
   // IMAGE SELECTION
 if (q.type === "image") {
   optionsBox.classList.add("image-grid");
@@ -350,7 +383,7 @@ shuffleArray(q.options).forEach(opt => {
 
   // AUDIO
   if (q.type === "audio") {
-    content.innerHTML = `<button class="audio-btn" onclick="speak('${q.speak}')">🔊 پخش</button>`;
+    content.innerHTML = "";
 
 shuffleArray(q.options).forEach(opt => {
       let b = document.createElement("button");
@@ -361,8 +394,7 @@ shuffleArray(q.options).forEach(opt => {
     });
   }
 
-  // BUILD ENGLISH
-    // BUILD ENGLISH / FA
+  // BUILD ENGLISH / FA
 
   else if (q.type === "build-en" || q.type === "build-fa") {
   content.innerHTML = `<p>${q.text}</p>`;
@@ -417,6 +449,26 @@ shuffleArray(q.words).forEach(w => {
   });
 }
 
+async function safeAddXP(amount) {
+  try {
+    if (typeof addXP === "function") {
+      await addXP(amount);
+    }
+  } catch (err) {
+    console.warn("ثبت XP رو سرور ناموفق بود (آفلاین یا خطای شبکه):", err);
+  }
+}
+
+async function safeLoseHeart() {
+  try {
+    if (typeof loseHeart === "function") {
+      await loseHeart();
+    }
+  } catch (err) {
+    console.warn("کم کردن قلب رو سرور ناموفق بود (آفلاین یا خطای شبکه):", err);
+  }
+}
+
 async function checkBuild(selected, correct) {
   const s = selected.map(w => w.trim().toLowerCase());
   const c = correct.map(w => w.trim().toLowerCase());
@@ -424,27 +476,16 @@ async function checkBuild(selected, correct) {
   if (JSON.stringify(s) === JSON.stringify(c)) {
     xp += 5;
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
+    await safeAddXP(5);
 
     current++;
     showQuestion();
   } else {
     alert("اشتباه بود! دوباره تلاش کن.");
 
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
+    await safeLoseHeart();
 
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
+    updateHeartDisplay();
 
     if (typeof getHearts === "function" && getHearts() <= 0) {
       document.getElementById("app").innerHTML = `
@@ -464,27 +505,16 @@ async function select(ans) {
   if (String(ans).trim().toLowerCase() === String(correct).trim().toLowerCase()) {
     xp += 5;
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
+    await safeAddXP(5);
 
     current++;
     showQuestion();
   } else {
     alert("اشتباه بود! دوباره تلاش کن.");
 
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
+    await safeLoseHeart();
 
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
+    updateHeartDisplay();
 
     if (typeof getHearts === "function" && getHearts() <= 0) {
       document.getElementById("app").innerHTML = `
@@ -553,6 +583,3 @@ function shuffleArray(arr) {
 
   return array;
 }
-
-
-showQuestion(); 
