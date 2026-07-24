@@ -2,7 +2,7 @@
    مسئول:
    - تعیین کورس فعال (english/french/...)
    - هماهنگ کردن userLang و currentCourse
-   - وایر کردن نب‌بار مشترک همه‌ی صفحات (خونه، مرور، پروفایل، پیشرفت، درس)
+   - وایر کردن نب‌بار مشترک همه‌ی صفحات (مرور، پروفایل، پیشرفت، درس)
 */
 
 const STORAGE_KEY = "duolingo_app_data"; // مطابق dataStorage.js
@@ -60,15 +60,14 @@ export function setCurrentCourse(course) {
 
 /**
  * وایر کردن نب‌بار مشترک.
- * انتظار: تو HTML این ۵ آیدی وجود داشته باشن (هر چندتاش که تو اون صفحه هست):
+ * انتظار: تو HTML این ۴ آیدی وجود داشته باشن (هر چندتاش که تو اون صفحه هست):
  *  #nav-lesson   -> <course>/index.html      (لیست درس‌ها)
  *  #nav-review   -> /review.html             (مرور)
- *  #nav-home     -> /home.html               (انتخاب زبان)
  *  #nav-progress -> <course>/progress.html   (آمار XP/دل)
  *  #nav-profile  -> /profile.html            (پروفایل)
  *
  * همه‌ی مسیرها absolute (شروع با /) هستن، پس فرقی نمی‌کنه صفحه‌ی فعلی
- * چقدر تو دایرکتوری‌ها عمیق باشه (home.html, english/index.html, ...).
+ * چقدر تو دایرکتوری‌ها عمیق باشه (english/index.html, ...).
  */
 export function wireBottomNav() {
   const course = getCurrentCourse();
@@ -76,7 +75,6 @@ export function wireBottomNav() {
   const nav = {
     lesson: document.querySelector("#nav-lesson"),
     review: document.querySelector("#nav-review"),
-    home: document.querySelector("#nav-home"),
     progress: document.querySelector("#nav-progress"),
     profile: document.querySelector("#nav-profile")
   };
@@ -84,7 +82,6 @@ export function wireBottomNav() {
   if (nav.lesson) nav.lesson.setAttribute("href", `/${course}/index.html`);
   if (nav.progress) nav.progress.setAttribute("href", `/${course}/progress.html`);
   if (nav.review) nav.review.setAttribute("href", "/review.html");
-  if (nav.home) nav.home.setAttribute("href", "/home.html");
   if (nav.profile) nav.profile.setAttribute("href", "/profile.html");
 
   // فعال کردن آیتم صفحه‌ی فعلی
@@ -94,8 +91,6 @@ export function wireBottomNav() {
 
   if (path === "review.html") {
     nav.review && nav.review.classList.add("active");
-  } else if (path === "home.html" || path === "") {
-    nav.home && nav.home.classList.add("active");
   } else if (path === "profile.html") {
     nav.profile && nav.profile.classList.add("active");
   } else if (path === "progress.html") {

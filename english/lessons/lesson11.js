@@ -2,6 +2,21 @@ let current = 0;
 let xp = 0;
 
 function speak(text){
+  // اگه داخل اپ موبایل (Capacitor) اجرا میشه، از موتور صدای خودِ اندروید استفاده کن
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    try {
+      window.Capacitor.Plugins.TextToSpeech.speak({
+        text: text,
+        lang: "en-US",
+        rate: 0.9,
+        category: "ambient"
+      });
+    } catch (err) {
+      console.warn("خطا در پخش صدا (native):", err);
+    }
+    return;
+  }
+
   if (!window.speechSynthesis) return;
 
   const utter = new SpeechSynthesisUtterance(text);
@@ -12,25 +27,33 @@ function speak(text){
   speechSynthesis.speak(utter);
 }
 
-window.onload = function() {
-  if (typeof checkAndRegenHearts === 'function') {
-  checkAndRegenHearts();
-}
-
-    if (typeof getHearts === 'function') {
-        const currentHearts = getHearts();
-        const heartElement = document.getElementById("heart-count");
-        if (heartElement) {
-            heartElement.textContent = currentHearts;
-        }
-        
-        // اگر قلب کاربر 0 بود، اجازه شروع درس را نده (اختیاری)
-        if (currentHearts <= 0) {
-            alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
-            window.location.href = "../home.html";
-        }
+window.onload = async function() {
+  // قبل از هر چیز، اطلاعات واقعی کاربر (قلب، XP) رو از سرور می‌گیریم
+  if (typeof initUserData === "function") {
+    try {
+      await initUserData();
+    } catch (err) {
+      console.warn("گرفتن اطلاعات کاربر ناموفق بود:", err);
     }
+  }
+
+  updateHeartDisplay();
+
+  if (typeof getHearts === "function" && getHearts() <= 0) {
+    alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
+    window.location.href = "../home.html";
+    return;
+  }
+
+  showQuestion();
 };
+
+function updateHeartDisplay() {
+  const heartElement = document.getElementById("heart-count");
+  if (heartElement && typeof getHearts === "function") {
+    heartElement.textContent = getHearts();
+  }
+}
 
 const questions = [
 
@@ -41,10 +64,10 @@ type:"image",
 question:"red کدام است؟",
 speak:"red",
 options:[
-{text:"blue",image:"../../media/colors/blue.png"},
-{text:"red",image:"../../media/colors/red.png"},
-{text:"green",image:"../../media/colors/green.png"},
-{text:"yellow",image:"../../media/colors/yellow.png"}
+{text:"blue",image:"../../media/colors/blue.webp"},
+{text:"red",image:"../../media/colors/red.webp"},
+{text:"green",image:"../../media/colors/green.webp"},
+{text:"yellow",image:"../../media/colors/yellow.webp"}
 ],
 answer:"red"
 },
@@ -54,10 +77,10 @@ type:"image",
 question:"blue کدام است؟",
 speak:"blue",
 options:[
-{text:"yellow",image:"../../media/colors/yellow.png"},
-{text:"blue",image:"../../media/colors/blue.png"},
-{text:"black",image:"../../media/colors/black.png"},
-{text:"red",image:"../../media/colors/red.png"}
+{text:"yellow",image:"../../media/colors/yellow.webp"},
+{text:"blue",image:"../../media/colors/blue.webp"},
+{text:"black",image:"../../media/colors/black.webp"},
+{text:"red",image:"../../media/colors/red.webp"}
 ],
 answer:"blue"
 },
@@ -67,10 +90,10 @@ type:"image",
 question:"green کدام است؟",
 speak:"green",
 options:[
-{text:"red",image:"../../media/colors/red.png"},
-{text:"green",image:"../../media/colors/green.png"},
-{text:"black",image:"../../media/colors/black.png"},
-{text:"blue",image:"../../media/colors/blue.png"}
+{text:"red",image:"../../media/colors/red.webp"},
+{text:"green",image:"../../media/colors/green.webp"},
+{text:"black",image:"../../media/colors/black.webp"},
+{text:"blue",image:"../../media/colors/blue.webp"}
 ],
 answer:"green"
 },
@@ -80,10 +103,10 @@ type:"image",
 question:"yellow کدام است؟",
 speak:"yellow",
 options:[
-{text:"green",image:"../../media/colors/green.png"},
-{text:"blue",image:"../../media/colors/blue.png"},
-{text:"yellow",image:"../../media/colors/yellow.png"},
-{text:"red",image:"../../media/colors/red.png"}
+{text:"green",image:"../../media/colors/green.webp"},
+{text:"blue",image:"../../media/colors/blue.webp"},
+{text:"yellow",image:"../../media/colors/yellow.webp"},
+{text:"red",image:"../../media/colors/red.webp"}
 ],
 answer:"yellow"
 },
@@ -93,10 +116,10 @@ type:"image",
 question:"black کدام است؟",
 speak:"black",
 options:[
-{text:"yellow",image:"../../media/colors/yellow.png"},
-{text:"red",image:"../../media/colors/red.png"},
-{text:"blue",image:"../../media/colors/blue.png"},
-{text:"black",image:"../../media/colors/black.png"}
+{text:"yellow",image:"../../media/colors/yellow.webp"},
+{text:"red",image:"../../media/colors/red.webp"},
+{text:"blue",image:"../../media/colors/blue.webp"},
+{text:"black",image:"../../media/colors/black.webp"}
 ],
 answer:"black"
 },
@@ -106,7 +129,7 @@ answer:"black"
 {
 type:"word",
 question:"این رنگ چیست؟",
-image:"../../media/colors/red.png",
+image:"../../media/colors/red.webp",
 options:["blue","red","green","yellow"],
 answer:"red"
 },
@@ -114,7 +137,7 @@ answer:"red"
 {
 type:"word",
 question:"این رنگ چیست؟",
-image:"../../media/colors/blue.png",
+image:"../../media/colors/blue.webp",
 options:["yellow","blue","black","red"],
 answer:"blue"
 },
@@ -122,7 +145,7 @@ answer:"blue"
 {
 type:"word",
 question:"این رنگ چیست؟",
-image:"../../media/colors/green.png",
+image:"../../media/colors/green.webp",
 options:["red","green","black","blue"],
 answer:"green"
 },
@@ -130,7 +153,7 @@ answer:"green"
 {
 type:"word",
 question:"این رنگ چیست؟",
-image:"../../media/colors/yellow.png",
+image:"../../media/colors/yellow.webp",
 options:["green","blue","yellow","red"],
 answer:"yellow"
 },
@@ -138,7 +161,7 @@ answer:"yellow"
 {
 type:"word",
 question:"این رنگ چیست؟",
-image:"../../media/colors/black.png",
+image:"../../media/colors/black.webp",
 options:["yellow","red","blue","black"],
 answer:"black"
 },
@@ -185,109 +208,108 @@ options:["yellow","red","blue","black"],
 answer:"black"
 },
 
-/* BUILD EN */
+/* BUILD EN - جدید با تنوع */
 
 {
 type:"build-en",
-speak:"This is red",
+speak:"The apple is red",
 question:"جمله انگلیسی را بساز:",
-text:"این قرمز است",
-words:["red","is","This"],
-answer:["This","is","red"]
-},
-
-{
-type:"build-en",
-speak:"This is blue",
-question:"جمله انگلیسی را بساز:",
-text:"این آبی است",
-words:["blue","is","This"],
-answer:["This","is","blue"]
+text:"سیب قرمز است",
+words:["apple","red","is","The"],
+answer:["The","apple","is","red"]
 },
 
 {
 type:"build-en",
-speak:"This is green",
+speak:"The sky is blue",
 question:"جمله انگلیسی را بساز:",
-text:"این سبز است",
-words:["green","is","This"],
-answer:["This","is","green"]
+text:"آسمان آبی است",
+words:["sky","blue","is","The"],
+answer:["The","sky","is","blue"]
 },
 
 {
 type:"build-en",
-speak:"This is yellow",
+speak:"The tree is green",
 question:"جمله انگلیسی را بساز:",
-text:"این زرد است",
-words:["yellow","is","This"],
-answer:["This","is","yellow"]
+text:"درخت سبز است",
+words:["tree","green","is","The"],
+answer:["The","tree","is","green"]
 },
 
 {
 type:"build-en",
-speak:"This is black",
+speak:"The sun is yellow",
 question:"جمله انگلیسی را بساز:",
-text:"این مشکی است",
-words:["black","is","This"],
-answer:["This","is","black"]
-},
-
-/* BUILD FA */
-
-{
-type:"build-fa",
-speak:"This is red",
-question:"ترجمه را بساز:",
-text:"This is red",
-words:["است","قرمز","این"],
-answer:["این","قرمز","است"]
+text:"خورشید زرد است",
+words:["sun","yellow","is","The"],
+answer:["The","sun","is","yellow"]
 },
 
 {
-type:"build-fa",
-speak:"This is blue",
-question:"ترجمه را بساز:",
-text:"This is blue",
-words:["است","آبی","این"],
-answer:["این","آبی","است"]
+type:"build-en",
+speak:"The cat is black",
+question:"جمله انگلیسی را بساز:",
+text:"گربه مشکی است",
+words:["cat","black","is","The"],
+answer:["The","cat","is","black"]
 },
+
+/* BUILD FA - جدید با تنوع */
 
 {
 type:"build-fa",
-speak:"This is green",
+speak:"The apple is red",
 question:"ترجمه را بساز:",
-text:"This is green",
-words:["است","سبز","این"],
-answer:["این","سبز","است"]
+text:"The apple is red",
+words:["است","قرمز","سیب"],
+answer:["سیب","قرمز","است"]
 },
 
 {
 type:"build-fa",
-speak:"This is yellow",
+speak:"The sky is blue",
 question:"ترجمه را بساز:",
-text:"This is yellow",
-words:["است","زرد","این"],
-answer:["این","زرد","است"]
+text:"The sky is blue",
+words:["است","آبی","آسمان"],
+answer:["آسمان","آبی","است"]
 },
 
 {
 type:"build-fa",
-speak:"This is black",
+speak:"The tree is green",
 question:"ترجمه را بساز:",
-text:"This is black",
-words:["است","مشکی","این"],
-answer:["این","مشکی","است"]
+text:"The tree is green",
+words:["است","سبز","درخت"],
+answer:["درخت","سبز","است"]
+},
+
+{
+type:"build-fa",
+speak:"The sun is yellow",
+question:"ترجمه را بساز:",
+text:"The sun is yellow",
+words:["است","زرد","خورشید"],
+answer:["خورشید","زرد","است"]
+},
+
+{
+type:"build-fa",
+speak:"The cat is black",
+question:"ترجمه را بساز:",
+text:"The cat is black",
+words:["است","مشکی","گربه"],
+answer:["گربه","مشکی","است"]
 }
 
 ];
 
+
 // =====================================
 // نمایش سوال
 // =====================================
-    // اضافه کردن XP کسب شده به دیتابیس پروفایل در پایان درس
 
-
-    function showQuestion() {
+function showQuestion() {
   if (current >= questions.length) {
     const finalXP = typeof getTotalXP === "function" ? getTotalXP() : xp;
 
@@ -311,6 +333,17 @@ answer:["این","مشکی","است"]
   const content = document.getElementById("question-content");
   const optionsBox = document.getElementById("options");
   const wordBuilder = document.getElementById("word-builder");
+  const repeatBtn = document.getElementById("repeat-audio-btn");
+
+  if (repeatBtn) {
+    if (q.speak) {
+      repeatBtn.style.display = "inline-block";
+      repeatBtn.onclick = () => speak(q.speak);
+    } else {
+      repeatBtn.style.display = "none";
+      repeatBtn.onclick = null;
+    }
+  }
 
   title.innerText = q.question;
   content.innerHTML = "";
@@ -318,7 +351,6 @@ answer:["این","مشکی","است"]
   wordBuilder.innerHTML = "";
 wordBuilder.classList.add("hidden");
 
-  // IMAGE SELECTION
   // IMAGE SELECTION
 if (q.type === "image") {
   optionsBox.classList.add("image-grid");
@@ -351,7 +383,7 @@ shuffleArray(q.options).forEach(opt => {
 
   // AUDIO
   if (q.type === "audio") {
-    content.innerHTML = `<button class="audio-btn" onclick="speak('${q.speak}')">🔊 پخش</button>`;
+    content.innerHTML = "";
 
 shuffleArray(q.options).forEach(opt => {
       let b = document.createElement("button");
@@ -362,8 +394,7 @@ shuffleArray(q.options).forEach(opt => {
     });
   }
 
-  // BUILD ENGLISH
-    // BUILD ENGLISH / FA
+  // BUILD ENGLISH / FA
 
   else if (q.type === "build-en" || q.type === "build-fa") {
   content.innerHTML = `<p>${q.text}</p>`;
@@ -418,6 +449,26 @@ shuffleArray(q.words).forEach(w => {
   });
 }
 
+async function safeAddXP(amount) {
+  try {
+    if (typeof addXP === "function") {
+      await addXP(amount);
+    }
+  } catch (err) {
+    console.warn("ثبت XP رو سرور ناموفق بود (آفلاین یا خطای شبکه):", err);
+  }
+}
+
+async function safeLoseHeart() {
+  try {
+    if (typeof loseHeart === "function") {
+      await loseHeart();
+    }
+  } catch (err) {
+    console.warn("کم کردن قلب رو سرور ناموفق بود (آفلاین یا خطای شبکه):", err);
+  }
+}
+
 async function checkBuild(selected, correct) {
   const s = selected.map(w => w.trim().toLowerCase());
   const c = correct.map(w => w.trim().toLowerCase());
@@ -425,27 +476,16 @@ async function checkBuild(selected, correct) {
   if (JSON.stringify(s) === JSON.stringify(c)) {
     xp += 5;
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
+    await safeAddXP(5);
 
     current++;
     showQuestion();
   } else {
     alert("اشتباه بود! دوباره تلاش کن.");
 
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
+    await safeLoseHeart();
 
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
+    updateHeartDisplay();
 
     if (typeof getHearts === "function" && getHearts() <= 0) {
       document.getElementById("app").innerHTML = `
@@ -465,27 +505,16 @@ async function select(ans) {
   if (String(ans).trim().toLowerCase() === String(correct).trim().toLowerCase()) {
     xp += 5;
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
+    await safeAddXP(5);
 
     current++;
     showQuestion();
   } else {
     alert("اشتباه بود! دوباره تلاش کن.");
 
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
+    await safeLoseHeart();
 
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
+    updateHeartDisplay();
 
     if (typeof getHearts === "function" && getHearts() <= 0) {
       document.getElementById("app").innerHTML = `
@@ -554,6 +583,3 @@ function shuffleArray(arr) {
 
   return array;
 }
-
-
-showQuestion(); 

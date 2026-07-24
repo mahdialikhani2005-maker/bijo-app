@@ -208,33 +208,42 @@ options:["eye","nose","hand","head"],
 answer:"nose"
 },
 
-/* BUILD EN */
+/* BUILD EN - جدید با تنوع شخصی */
 
 {
 type:"build-en",
-speak:"This is my head",
+speak:"I have a head",
 question:"جمله انگلیسی را بساز:",
-text:"این سر من است",
-words:["head","is","my","This"],
-answer:["This","is","my","head"]
+text:"من یک سر دارم",
+words:["have","a","head","I"],
+answer:["I","have","a","head"]
 },
 
 {
 type:"build-en",
-speak:"This is my hand",
+speak:"You have a hand",
 question:"جمله انگلیسی را بساز:",
-text:"این دست من است",
-words:["hand","is","my","This"],
-answer:["This","is","my","hand"]
+text:"تو یک دست داری",
+words:["have","a","You","hand"],
+answer:["You","have","a","hand"]
 },
 
 {
 type:"build-en",
-speak:"This is my eye",
+speak:"She has two eyes",
 question:"جمله انگلیسی را بساز:",
-text:"این چشم من است",
-words:["eye","is","my","This"],
-answer:["This","is","my","eye"]
+text:"او دو چشم دارد",
+words:["has","She","two","eyes"],
+answer:["She","has","two","eyes"]
+},
+
+{
+type:"build-en",
+speak:"He has a nose",
+question:"جمله انگلیسی را بساز:",
+text:"او یک بینی دارد",
+words:["has","He","nose","a"],
+answer:["He","has","a","nose"]
 },
 
 {
@@ -242,46 +251,46 @@ type:"build-en",
 speak:"This is my foot",
 question:"جمله انگلیسی را بساز:",
 text:"این پای من است",
-words:["foot","is","my","This"],
+words:["my","is","foot","This"],
 answer:["This","is","my","foot"]
 },
 
-{
-type:"build-en",
-speak:"This is my nose",
-question:"جمله انگلیسی را بساز:",
-text:"این بینی من است",
-words:["nose","is","my","This"],
-answer:["This","is","my","nose"]
-},
-
-/* BUILD FA */
+/* BUILD FA - جدید با تنوع شخصی */
 
 {
 type:"build-fa",
-speak:"This is my head",
+speak:"I have a head",
 question:"ترجمه را بساز:",
-text:"This is my head",
-words:["است","سر","این","من"],
-answer:["این","سر","من","است"]
+text:"I have a head",
+words:["دارم","سر","یک","من"],
+answer:["من","یک","سر","دارم"]
 },
 
 {
 type:"build-fa",
-speak:"This is my hand",
+speak:"You have a hand",
 question:"ترجمه را بساز:",
-text:"This is my hand",
-words:["است","دست","این","من"],
-answer:["این","دست","من","است"]
+text:"You have a hand",
+words:["یک","داری","دست","تو"],
+answer:["تو","یک","دست","داری"]
 },
 
 {
 type:"build-fa",
-speak:"This is my eye",
+speak:"She has two eyes",
 question:"ترجمه را بساز:",
-text:"This is my eye",
-words:["است","چشم","این","من"],
-answer:["این","چشم","من","است"]
+text:"She has two eyes",
+words:["دارد","او","دو","چشم"],
+answer:["او","دو","چشم","دارد"]
+},
+
+{
+type:"build-fa",
+speak:"He has a nose",
+question:"ترجمه را بساز:",
+text:"He has a nose",
+words:["دارد","یک","او","بینی"],
+answer:["او","یک","بینی","دارد"]
 },
 
 {
@@ -291,15 +300,6 @@ question:"ترجمه را بساز:",
 text:"This is my foot",
 words:["است","پا","این","من"],
 answer:["این","پا","من","است"]
-},
-
-{
-type:"build-fa",
-speak:"This is my nose",
-question:"ترجمه را بساز:",
-text:"This is my nose",
-words:["است","بینی","این","من"],
-answer:["این","بینی","من","است"]
 }
 
 ];

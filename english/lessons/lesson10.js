@@ -2,6 +2,21 @@ let current = 0;
 let xp = 0;
 
 function speak(text){
+  // اگه داخل اپ موبایل (Capacitor) اجرا میشه، از موتور صدای خودِ اندروید استفاده کن
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    try {
+      window.Capacitor.Plugins.TextToSpeech.speak({
+        text: text,
+        lang: "en-US",
+        rate: 0.9,
+        category: "ambient"
+      });
+    } catch (err) {
+      console.warn("خطا در پخش صدا (native):", err);
+    }
+    return;
+  }
+
   if (!window.speechSynthesis) return;
 
   const utter = new SpeechSynthesisUtterance(text);
@@ -12,25 +27,33 @@ function speak(text){
   speechSynthesis.speak(utter);
 }
 
-window.onload = function() {
-  if (typeof checkAndRegenHearts === 'function') {
-  checkAndRegenHearts();
-}
-
-    if (typeof getHearts === 'function') {
-        const currentHearts = getHearts();
-        const heartElement = document.getElementById("heart-count");
-        if (heartElement) {
-            heartElement.textContent = currentHearts;
-        }
-        
-        // اگر قلب کاربر 0 بود، اجازه شروع درس را نده (اختیاری)
-        if (currentHearts <= 0) {
-            alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
-            window.location.href = "../home.html";
-        }
+window.onload = async function() {
+  // قبل از هر چیز، اطلاعات واقعی کاربر (قلب، XP) رو از سرور می‌گیریم
+  if (typeof initUserData === "function") {
+    try {
+      await initUserData();
+    } catch (err) {
+      console.warn("گرفتن اطلاعات کاربر ناموفق بود:", err);
     }
+  }
+
+  updateHeartDisplay();
+
+  if (typeof getHearts === "function" && getHearts() <= 0) {
+    alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
+    window.location.href = "../home.html";
+    return;
+  }
+
+  showQuestion();
 };
+
+function updateHeartDisplay() {
+  const heartElement = document.getElementById("heart-count");
+  if (heartElement && typeof getHearts === "function") {
+    heartElement.textContent = getHearts();
+  }
+}
 
 const questions = [
 
@@ -41,10 +64,10 @@ type:"image",
 question:"hot کدام است؟",
 speak:"hot",
 options:[
-{text:"cold",image:"../../media/weather/cold.png"},
-{text:"hot",image:"../../media/weather/hot.png"},
-{text:"sunny",image:"../../media/weather/sunny.png"},
-{text:"cloudy",image:"../../media/weather/cloudy.png"}
+{text:"cold",image:"../../media/weather/cold.webp"},
+{text:"hot",image:"../../media/weather/hot.webp"},
+{text:"sunny",image:"../../media/weather/sunny.webp"},
+{text:"cloudy",image:"../../media/weather/cloudy.webp"}
 ],
 answer:"hot"
 },
@@ -54,10 +77,10 @@ type:"image",
 question:"cold کدام است؟",
 speak:"cold",
 options:[
-{text:"sunny",image:"../../media/weather/sunny.png"},
-{text:"cold",image:"../../media/weather/cold.png"},
-{text:"wind",image:"../../media/weather/wind.png"},
-{text:"hot",image:"../../media/weather/hot.png"}
+{text:"sunny",image:"../../media/weather/sunny.webp"},
+{text:"cold",image:"../../media/weather/cold.webp"},
+{text:"wind",image:"../../media/weather/wind.webp"},
+{text:"hot",image:"../../media/weather/hot.webp"}
 ],
 answer:"cold"
 },
@@ -67,10 +90,10 @@ type:"image",
 question:"sunny کدام است؟",
 speak:"sunny",
 options:[
-{text:"hot",image:"../../media/weather/hot.png"},
-{text:"sunny",image:"../../media/weather/sunny.png"},
-{text:"wind",image:"../../media/weather/wind.png"},
-{text:"cold",image:"../../media/weather/cold.png"}
+{text:"hot",image:"../../media/weather/hot.webp"},
+{text:"sunny",image:"../../media/weather/sunny.webp"},
+{text:"wind",image:"../../media/weather/wind.webp"},
+{text:"cold",image:"../../media/weather/cold.webp"}
 ],
 answer:"sunny"
 },
@@ -80,10 +103,10 @@ type:"image",
 question:"cloudy کدام است؟",
 speak:"cloudy",
 options:[
-{text:"sunny",image:"../../media/weather/sunny.png"},
-{text:"cold",image:"../../media/weather/cold.png"},
-{text:"cloudy",image:"../../media/weather/cloudy.png"},
-{text:"hot",image:"../../media/weather/hot.png"}
+{text:"sunny",image:"../../media/weather/sunny.webp"},
+{text:"cold",image:"../../media/weather/cold.webp"},
+{text:"cloudy",image:"../../media/weather/cloudy.webp"},
+{text:"hot",image:"../../media/weather/hot.webp"}
 ],
 answer:"cloudy"
 },
@@ -93,10 +116,10 @@ type:"image",
 question:"wind کدام است؟",
 speak:"wind",
 options:[
-{text:"cloudy",image:"../../media/weather/cloudy.png"},
-{text:"hot",image:"../../media/weather/hot.png"},
-{text:"cold",image:"../../media/weather/cold.png"},
-{text:"wind",image:"../../media/weather/wind.png"}
+{text:"cloudy",image:"../../media/weather/cloudy.webp"},
+{text:"hot",image:"../../media/weather/hot.webp"},
+{text:"cold",image:"../../media/weather/cold.webp"},
+{text:"wind",image:"../../media/weather/wind.webp"}
 ],
 answer:"wind"
 },
@@ -106,7 +129,7 @@ answer:"wind"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/weather/hot.png",
+image:"../../media/weather/hot.webp",
 options:["cold","hot","sunny","cloudy"],
 answer:"hot"
 },
@@ -114,7 +137,7 @@ answer:"hot"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/weather/cold.png",
+image:"../../media/weather/cold.webp",
 options:["sunny","cold","wind","hot"],
 answer:"cold"
 },
@@ -122,7 +145,7 @@ answer:"cold"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/weather/sunny.png",
+image:"../../media/weather/sunny.webp",
 options:["hot","sunny","wind","cold"],
 answer:"sunny"
 },
@@ -130,7 +153,7 @@ answer:"sunny"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/weather/cloudy.png",
+image:"../../media/weather/cloudy.webp",
 options:["sunny","cold","cloudy","hot"],
 answer:"cloudy"
 },
@@ -138,7 +161,7 @@ answer:"cloudy"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/weather/wind.png",
+image:"../../media/weather/wind.webp",
 options:["cloudy","hot","cold","wind"],
 answer:"wind"
 },
@@ -185,7 +208,7 @@ options:["cloudy","hot","cold","wind"],
 answer:"wind"
 },
 
-/* BUILD EN */
+/* BUILD EN - جدید ساده با تنوع */
 
 {
 type:"build-en",
@@ -207,32 +230,32 @@ answer:["It","is","cold"]
 
 {
 type:"build-en",
-speak:"It is sunny",
+speak:"The sun is hot",
 question:"جمله انگلیسی را بساز:",
-text:"هوا آفتابی است",
-words:["sunny","is","It"],
-answer:["It","is","sunny"]
+text:"خورشید گرم است",
+words:["sun","hot","is","The"],
+answer:["The","sun","is","hot"]
 },
 
 {
 type:"build-en",
-speak:"It is cloudy",
+speak:"The sky is cloudy",
 question:"جمله انگلیسی را بساز:",
-text:"هوا ابری است",
-words:["cloudy","is","It"],
-answer:["It","is","cloudy"]
+text:"آسمان ابری است",
+words:["sky","cloudy","is","The"],
+answer:["The","sky","is","cloudy"]
 },
 
 {
 type:"build-en",
-speak:"It is windy",
+speak:"I like sunny days",
 question:"جمله انگلیسی را بساز:",
-text:"هوا بادی است",
-words:["windy","is","It"],
-answer:["It","is","windy"]
+text:"من روزهای آفتابی را دوست دارم",
+words:["like","sunny","days","I"],
+answer:["I","like","sunny","days"]
 },
 
-/* BUILD FA */
+/* BUILD FA - جدید ساده با تنوع */
 
 {
 type:"build-fa",
@@ -254,40 +277,39 @@ answer:["هوا","سرد","است"]
 
 {
 type:"build-fa",
-speak:"It is sunny",
+speak:"The sun is hot",
 question:"ترجمه را بساز:",
-text:"It is sunny",
-words:["است","آفتابی","هوا"],
-answer:["هوا","آفتابی","است"]
+text:"The sun is hot",
+words:["است","گرم","خورشید"],
+answer:["خورشید","گرم","است"]
 },
 
 {
 type:"build-fa",
-speak:"It is cloudy",
+speak:"The sky is cloudy",
 question:"ترجمه را بساز:",
-text:"It is cloudy",
-words:["است","ابری","هوا"],
-answer:["هوا","ابری","است"]
+text:"The sky is cloudy",
+words:["است","ابری","آسمان"],
+answer:["آسمان","ابری","است"]
 },
 
 {
 type:"build-fa",
-speak:"It is windy",
+speak:"I like sunny days",
 question:"ترجمه را بساز:",
-text:"It is windy",
-words:["است","بادی","هوا"],
-answer:["هوا","بادی","است"]
+text:"I like sunny days",
+words:["دارم","دوست","آفتابی","روزهای","من"],
+answer:["من","روزهای","آفتابی","را","دوست","دارم"]
 }
 
 ];
 
+
 // =====================================
 // نمایش سوال
 // =====================================
-    // اضافه کردن XP کسب شده به دیتابیس پروفایل در پایان درس
 
-
-    function showQuestion() {
+function showQuestion() {
   if (current >= questions.length) {
     const finalXP = typeof getTotalXP === "function" ? getTotalXP() : xp;
 
@@ -311,6 +333,17 @@ answer:["هوا","بادی","است"]
   const content = document.getElementById("question-content");
   const optionsBox = document.getElementById("options");
   const wordBuilder = document.getElementById("word-builder");
+  const repeatBtn = document.getElementById("repeat-audio-btn");
+
+  if (repeatBtn) {
+    if (q.speak) {
+      repeatBtn.style.display = "inline-block";
+      repeatBtn.onclick = () => speak(q.speak);
+    } else {
+      repeatBtn.style.display = "none";
+      repeatBtn.onclick = null;
+    }
+  }
 
   title.innerText = q.question;
   content.innerHTML = "";
@@ -318,7 +351,6 @@ answer:["هوا","بادی","است"]
   wordBuilder.innerHTML = "";
 wordBuilder.classList.add("hidden");
 
-  // IMAGE SELECTION
   // IMAGE SELECTION
 if (q.type === "image") {
   optionsBox.classList.add("image-grid");
@@ -351,7 +383,7 @@ shuffleArray(q.options).forEach(opt => {
 
   // AUDIO
   if (q.type === "audio") {
-    content.innerHTML = `<button class="audio-btn" onclick="speak('${q.speak}')">🔊 پخش</button>`;
+    content.innerHTML = "";
 
 shuffleArray(q.options).forEach(opt => {
       let b = document.createElement("button");
@@ -362,8 +394,7 @@ shuffleArray(q.options).forEach(opt => {
     });
   }
 
-  // BUILD ENGLISH
-    // BUILD ENGLISH / FA
+  // BUILD ENGLISH / FA
 
   else if (q.type === "build-en" || q.type === "build-fa") {
   content.innerHTML = `<p>${q.text}</p>`;
@@ -418,6 +449,26 @@ shuffleArray(q.words).forEach(w => {
   });
 }
 
+async function safeAddXP(amount) {
+  try {
+    if (typeof addXP === "function") {
+      await addXP(amount);
+    }
+  } catch (err) {
+    console.warn("ثبت XP رو سرور ناموفق بود (آفلاین یا خطای شبکه):", err);
+  }
+}
+
+async function safeLoseHeart() {
+  try {
+    if (typeof loseHeart === "function") {
+      await loseHeart();
+    }
+  } catch (err) {
+    console.warn("کم کردن قلب رو سرور ناموفق بود (آفلاین یا خطای شبکه):", err);
+  }
+}
+
 async function checkBuild(selected, correct) {
   const s = selected.map(w => w.trim().toLowerCase());
   const c = correct.map(w => w.trim().toLowerCase());
@@ -425,27 +476,16 @@ async function checkBuild(selected, correct) {
   if (JSON.stringify(s) === JSON.stringify(c)) {
     xp += 5;
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
+    await safeAddXP(5);
 
     current++;
     showQuestion();
   } else {
     alert("اشتباه بود! دوباره تلاش کن.");
 
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
+    await safeLoseHeart();
 
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
+    updateHeartDisplay();
 
     if (typeof getHearts === "function" && getHearts() <= 0) {
       document.getElementById("app").innerHTML = `
@@ -465,27 +505,16 @@ async function select(ans) {
   if (String(ans).trim().toLowerCase() === String(correct).trim().toLowerCase()) {
     xp += 5;
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
+    await safeAddXP(5);
 
     current++;
     showQuestion();
   } else {
     alert("اشتباه بود! دوباره تلاش کن.");
 
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
+    await safeLoseHeart();
 
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
+    updateHeartDisplay();
 
     if (typeof getHearts === "function" && getHearts() <= 0) {
       document.getElementById("app").innerHTML = `
@@ -554,6 +583,3 @@ function shuffleArray(arr) {
 
   return array;
 }
-
-
-showQuestion(); 

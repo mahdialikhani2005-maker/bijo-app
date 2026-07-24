@@ -2,6 +2,21 @@ let current = 0;
 let xp = 0;
 
 function speak(text){
+  // اگه داخل اپ موبایل (Capacitor) اجرا میشه، از موتور صدای خودِ اندروید استفاده کن
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    try {
+      window.Capacitor.Plugins.TextToSpeech.speak({
+        text: text,
+        lang: "en-US",
+        rate: 0.9,
+        category: "ambient"
+      });
+    } catch (err) {
+      console.warn("خطا در پخش صدا (native):", err);
+    }
+    return;
+  }
+
   if (!window.speechSynthesis) return;
 
   const utter = new SpeechSynthesisUtterance(text);
@@ -12,25 +27,33 @@ function speak(text){
   speechSynthesis.speak(utter);
 }
 
-window.onload = function() {
-  if (typeof checkAndRegenHearts === 'function') {
-  checkAndRegenHearts();
-}
-
-    if (typeof getHearts === 'function') {
-        const currentHearts = getHearts();
-        const heartElement = document.getElementById("heart-count");
-        if (heartElement) {
-            heartElement.textContent = currentHearts;
-        }
-        
-        // اگر قلب کاربر 0 بود، اجازه شروع درس را نده (اختیاری)
-        if (currentHearts <= 0) {
-            alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
-            window.location.href = "../home.html";
-        }
+window.onload = async function() {
+  // قبل از هر چیز، اطلاعات واقعی کاربر (قلب، XP) رو از سرور می‌گیریم
+  if (typeof initUserData === "function") {
+    try {
+      await initUserData();
+    } catch (err) {
+      console.warn("گرفتن اطلاعات کاربر ناموفق بود:", err);
     }
+  }
+
+  updateHeartDisplay();
+
+  if (typeof getHearts === "function" && getHearts() <= 0) {
+    alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
+    window.location.href = "../home.html";
+    return;
+  }
+
+  showQuestion();
 };
+
+function updateHeartDisplay() {
+  const heartElement = document.getElementById("heart-count");
+  if (heartElement && typeof getHearts === "function") {
+    heartElement.textContent = getHearts();
+  }
+}
 
 const questions = [
 
@@ -41,10 +64,10 @@ type:"image",
 question:"dog کدام است؟",
 speak:"dog",
 options:[
-{text:"cat",image:"../../media/animals/cat.png"},
-{text:"dog",image:"../../media/animals/dog.png"},
-{text:"bird",image:"../../media/animals/bird.png"},
-{text:"fish",image:"../../media/animals/fish.png"}
+{text:"cat",image:"../../media/animals/cat.webp"},
+{text:"dog",image:"../../media/animals/dog.webp"},
+{text:"bird",image:"../../media/animals/bird.webp"},
+{text:"fish",image:"../../media/animals/fish.webp"}
 ],
 answer:"dog"
 },
@@ -54,10 +77,10 @@ type:"image",
 question:"cat کدام است؟",
 speak:"cat",
 options:[
-{text:"fish",image:"../../media/animals/fish.png"},
-{text:"cat",image:"../../media/animals/cat.png"},
-{text:"horse",image:"../../media/animals/horse.png"},
-{text:"dog",image:"../../media/animals/dog.png"}
+{text:"fish",image:"../../media/animals/fish.webp"},
+{text:"cat",image:"../../media/animals/cat.webp"},
+{text:"horse",image:"../../media/animals/horse.webp"},
+{text:"dog",image:"../../media/animals/dog.webp"}
 ],
 answer:"cat"
 },
@@ -67,10 +90,10 @@ type:"image",
 question:"bird کدام است؟",
 speak:"bird",
 options:[
-{text:"dog",image:"../../media/animals/dog.png"},
-{text:"bird",image:"../../media/animals/bird.png"},
-{text:"horse",image:"../../media/animals/horse.png"},
-{text:"cat",image:"../../media/animals/cat.png"}
+{text:"dog",image:"../../media/animals/dog.webp"},
+{text:"bird",image:"../../media/animals/bird.webp"},
+{text:"horse",image:"../../media/animals/horse.webp"},
+{text:"cat",image:"../../media/animals/cat.webp"}
 ],
 answer:"bird"
 },
@@ -80,10 +103,10 @@ type:"image",
 question:"fish کدام است؟",
 speak:"fish",
 options:[
-{text:"bird",image:"../../media/animals/bird.png"},
-{text:"cat",image:"../../media/animals/cat.png"},
-{text:"fish",image:"../../media/animals/fish.png"},
-{text:"dog",image:"../../media/animals/dog.png"}
+{text:"bird",image:"../../media/animals/bird.webp"},
+{text:"cat",image:"../../media/animals/cat.webp"},
+{text:"fish",image:"../../media/animals/fish.webp"},
+{text:"dog",image:"../../media/animals/dog.webp"}
 ],
 answer:"fish"
 },
@@ -93,10 +116,10 @@ type:"image",
 question:"horse کدام است؟",
 speak:"horse",
 options:[
-{text:"fish",image:"../../media/animals/fish.png"},
-{text:"dog",image:"../../media/animals/dog.png"},
-{text:"cat",image:"../../media/animals/cat.png"},
-{text:"horse",image:"../../media/animals/horse.png"}
+{text:"fish",image:"../../media/animals/fish.webp"},
+{text:"dog",image:"../../media/animals/dog.webp"},
+{text:"cat",image:"../../media/animals/cat.webp"},
+{text:"horse",image:"../../media/animals/horse.webp"}
 ],
 answer:"horse"
 },
@@ -106,7 +129,7 @@ answer:"horse"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/animals/dog.png",
+image:"../../media/animals/dog.webp",
 options:["cat","dog","bird","fish"],
 answer:"dog"
 },
@@ -114,7 +137,7 @@ answer:"dog"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/animals/cat.png",
+image:"../../media/animals/cat.webp",
 options:["fish","cat","horse","dog"],
 answer:"cat"
 },
@@ -122,7 +145,7 @@ answer:"cat"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/animals/bird.png",
+image:"../../media/animals/bird.webp",
 options:["dog","bird","horse","cat"],
 answer:"bird"
 },
@@ -130,7 +153,7 @@ answer:"bird"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/animals/fish.png",
+image:"../../media/animals/fish.webp",
 options:["bird","cat","fish","dog"],
 answer:"fish"
 },
@@ -138,7 +161,7 @@ answer:"fish"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/animals/horse.png",
+image:"../../media/animals/horse.webp",
 options:["fish","dog","cat","horse"],
 answer:"horse"
 },
@@ -185,42 +208,42 @@ options:["fish","dog","cat","horse"],
 answer:"horse"
 },
 
-/* BUILD EN */
+/* BUILD EN - جدید با تنوع */
 
 {
 type:"build-en",
-speak:"This is a dog",
+speak:"I have a dog",
 question:"جمله انگلیسی را بساز:",
-text:"این یک سگ است",
-words:["dog","a","is","This"],
-answer:["This","is","a","dog"]
+text:"من یک سگ دارم",
+words:["have","a","dog","I"],
+answer:["I","have","a","dog"]
 },
 
 {
 type:"build-en",
-speak:"This is a cat",
+speak:"She has a cat",
 question:"جمله انگلیسی را بساز:",
-text:"این یک گربه است",
-words:["cat","a","is","This"],
-answer:["This","is","a","cat"]
+text:"او یک گربه دارد",
+words:["has","a","cat","She"],
+answer:["She","has","a","cat"]
 },
 
 {
 type:"build-en",
-speak:"This is a bird",
+speak:"I see a bird",
 question:"جمله انگلیسی را بساز:",
-text:"این یک پرنده است",
-words:["bird","a","is","This"],
-answer:["This","is","a","bird"]
+text:"من یک پرنده می‌بینم",
+words:["see","a","bird","I"],
+answer:["I","see","a","bird"]
 },
 
 {
 type:"build-en",
-speak:"This is a fish",
+speak:"He has a fish",
 question:"جمله انگلیسی را بساز:",
-text:"این یک ماهی است",
-words:["fish","a","is","This"],
-answer:["This","is","a","fish"]
+text:"او یک ماهی دارد",
+words:["has","a","fish","He"],
+answer:["He","has","a","fish"]
 },
 
 {
@@ -228,46 +251,46 @@ type:"build-en",
 speak:"This is a horse",
 question:"جمله انگلیسی را بساز:",
 text:"این یک اسب است",
-words:["horse","a","is","This"],
+words:["is","a","horse","This"],
 answer:["This","is","a","horse"]
 },
 
-/* BUILD FA */
+/* BUILD FA - جدید با تنوع */
 
 {
 type:"build-fa",
-speak:"This is a dog",
+speak:"I have a dog",
 question:"ترجمه را بساز:",
-text:"This is a dog",
-words:["است","سگ","یک","این"],
-answer:["این","یک","سگ","است"]
+text:"I have a dog",
+words:["دارم","سگ","یک","من"],
+answer:["من","یک","سگ","دارم"]
 },
 
 {
 type:"build-fa",
-speak:"This is a cat",
+speak:"She has a cat",
 question:"ترجمه را بساز:",
-text:"This is a cat",
-words:["است","گربه","یک","این"],
-answer:["این","یک","گربه","است"]
+text:"She has a cat",
+words:["دارد","گربه","یک","او"],
+answer:["او","یک","گربه","دارد"]
 },
 
 {
 type:"build-fa",
-speak:"This is a bird",
+speak:"I see a bird",
 question:"ترجمه را بساز:",
-text:"This is a bird",
-words:["است","پرنده","یک","این"],
-answer:["این","یک","پرنده","است"]
+text:"I see a bird",
+words:["می‌بینم","پرنده","یک","من"],
+answer:["من","یک","پرنده","می‌بینم"]
 },
 
 {
 type:"build-fa",
-speak:"This is a fish",
+speak:"He has a fish",
 question:"ترجمه را بساز:",
-text:"This is a fish",
-words:["است","ماهی","یک","این"],
-answer:["این","یک","ماهی","است"]
+text:"He has a fish",
+words:["دارد","ماهی","یک","او"],
+answer:["او","یک","ماهی","دارد"]
 },
 
 {
@@ -281,13 +304,12 @@ answer:["این","یک","اسب","است"]
 
 ];
 
+
 // =====================================
 // نمایش سوال
 // =====================================
-    // اضافه کردن XP کسب شده به دیتابیس پروفایل در پایان درس
 
-
-    function showQuestion() {
+function showQuestion() {
   if (current >= questions.length) {
     const finalXP = typeof getTotalXP === "function" ? getTotalXP() : xp;
 
@@ -311,6 +333,17 @@ answer:["این","یک","اسب","است"]
   const content = document.getElementById("question-content");
   const optionsBox = document.getElementById("options");
   const wordBuilder = document.getElementById("word-builder");
+  const repeatBtn = document.getElementById("repeat-audio-btn");
+
+  if (repeatBtn) {
+    if (q.speak) {
+      repeatBtn.style.display = "inline-block";
+      repeatBtn.onclick = () => speak(q.speak);
+    } else {
+      repeatBtn.style.display = "none";
+      repeatBtn.onclick = null;
+    }
+  }
 
   title.innerText = q.question;
   content.innerHTML = "";
@@ -318,7 +351,6 @@ answer:["این","یک","اسب","است"]
   wordBuilder.innerHTML = "";
 wordBuilder.classList.add("hidden");
 
-  // IMAGE SELECTION
   // IMAGE SELECTION
 if (q.type === "image") {
   optionsBox.classList.add("image-grid");
@@ -351,7 +383,7 @@ shuffleArray(q.options).forEach(opt => {
 
   // AUDIO
   if (q.type === "audio") {
-    content.innerHTML = `<button class="audio-btn" onclick="speak('${q.speak}')">🔊 پخش</button>`;
+    content.innerHTML = "";
 
 shuffleArray(q.options).forEach(opt => {
       let b = document.createElement("button");
@@ -362,8 +394,7 @@ shuffleArray(q.options).forEach(opt => {
     });
   }
 
-  // BUILD ENGLISH
-    // BUILD ENGLISH / FA
+  // BUILD ENGLISH / FA
 
   else if (q.type === "build-en" || q.type === "build-fa") {
   content.innerHTML = `<p>${q.text}</p>`;
@@ -418,6 +449,26 @@ shuffleArray(q.words).forEach(w => {
   });
 }
 
+async function safeAddXP(amount) {
+  try {
+    if (typeof addXP === "function") {
+      await addXP(amount);
+    }
+  } catch (err) {
+    console.warn("ثبت XP رو سرور ناموفق بود (آفلاین یا خطای شبکه):", err);
+  }
+}
+
+async function safeLoseHeart() {
+  try {
+    if (typeof loseHeart === "function") {
+      await loseHeart();
+    }
+  } catch (err) {
+    console.warn("کم کردن قلب رو سرور ناموفق بود (آفلاین یا خطای شبکه):", err);
+  }
+}
+
 async function checkBuild(selected, correct) {
   const s = selected.map(w => w.trim().toLowerCase());
   const c = correct.map(w => w.trim().toLowerCase());
@@ -425,27 +476,16 @@ async function checkBuild(selected, correct) {
   if (JSON.stringify(s) === JSON.stringify(c)) {
     xp += 5;
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
+    await safeAddXP(5);
 
     current++;
     showQuestion();
   } else {
     alert("اشتباه بود! دوباره تلاش کن.");
 
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
+    await safeLoseHeart();
 
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
+    updateHeartDisplay();
 
     if (typeof getHearts === "function" && getHearts() <= 0) {
       document.getElementById("app").innerHTML = `
@@ -465,27 +505,16 @@ async function select(ans) {
   if (String(ans).trim().toLowerCase() === String(correct).trim().toLowerCase()) {
     xp += 5;
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
+    await safeAddXP(5);
 
     current++;
     showQuestion();
   } else {
     alert("اشتباه بود! دوباره تلاش کن.");
 
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
+    await safeLoseHeart();
 
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
+    updateHeartDisplay();
 
     if (typeof getHearts === "function" && getHearts() <= 0) {
       document.getElementById("app").innerHTML = `
@@ -554,6 +583,3 @@ function shuffleArray(arr) {
 
   return array;
 }
-
-
-showQuestion(); 

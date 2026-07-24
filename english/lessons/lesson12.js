@@ -2,6 +2,21 @@ let current = 0;
 let xp = 0;
 
 function speak(text){
+  // اگه داخل اپ موبایل (Capacitor) اجرا میشه، از موتور صدای خودِ اندروید استفاده کن
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    try {
+      window.Capacitor.Plugins.TextToSpeech.speak({
+        text: text,
+        lang: "en-US",
+        rate: 0.9,
+        category: "ambient"
+      });
+    } catch (err) {
+      console.warn("خطا در پخش صدا (native):", err);
+    }
+    return;
+  }
+
   if (!window.speechSynthesis) return;
 
   const utter = new SpeechSynthesisUtterance(text);
@@ -12,25 +27,33 @@ function speak(text){
   speechSynthesis.speak(utter);
 }
 
-window.onload = function() {
-  if (typeof checkAndRegenHearts === 'function') {
-  checkAndRegenHearts();
-}
-
-    if (typeof getHearts === 'function') {
-        const currentHearts = getHearts();
-        const heartElement = document.getElementById("heart-count");
-        if (heartElement) {
-            heartElement.textContent = currentHearts;
-        }
-        
-        // اگر قلب کاربر 0 بود، اجازه شروع درس را نده (اختیاری)
-        if (currentHearts <= 0) {
-            alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
-            window.location.href = "../home.html";
-        }
+window.onload = async function() {
+  // قبل از هر چیز، اطلاعات واقعی کاربر (قلب، XP) رو از سرور می‌گیریم
+  if (typeof initUserData === "function") {
+    try {
+      await initUserData();
+    } catch (err) {
+      console.warn("گرفتن اطلاعات کاربر ناموفق بود:", err);
     }
+  }
+
+  updateHeartDisplay();
+
+  if (typeof getHearts === "function" && getHearts() <= 0) {
+    alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
+    window.location.href = "../home.html";
+    return;
+  }
+
+  showQuestion();
 };
+
+function updateHeartDisplay() {
+  const heartElement = document.getElementById("heart-count");
+  if (heartElement && typeof getHearts === "function") {
+    heartElement.textContent = getHearts();
+  }
+}
 
 const questions = [
 
@@ -41,10 +64,10 @@ type:"image",
 question:"one کدام است؟",
 speak:"one",
 options:[
-{text:"two",image:"../../media/numbers/two.png"},
-{text:"one",image:"../../media/numbers/one.png"},
-{text:"three",image:"../../media/numbers/three.png"},
-{text:"four",image:"../../media/numbers/four.png"}
+{text:"two",image:"../../media/numbers/two.webp"},
+{text:"one",image:"../../media/numbers/one.webp"},
+{text:"three",image:"../../media/numbers/three.webp"},
+{text:"four",image:"../../media/numbers/four.webp"}
 ],
 answer:"one"
 },
@@ -54,10 +77,10 @@ type:"image",
 question:"two کدام است؟",
 speak:"two",
 options:[
-{text:"four",image:"../../media/numbers/four.png"},
-{text:"two",image:"../../media/numbers/two.png"},
-{text:"five",image:"../../media/numbers/five.png"},
-{text:"one",image:"../../media/numbers/one.png"}
+{text:"four",image:"../../media/numbers/four.webp"},
+{text:"two",image:"../../media/numbers/two.webp"},
+{text:"five",image:"../../media/numbers/five.webp"},
+{text:"one",image:"../../media/numbers/one.webp"}
 ],
 answer:"two"
 },
@@ -67,10 +90,10 @@ type:"image",
 question:"three کدام است؟",
 speak:"three",
 options:[
-{text:"one",image:"../../media/numbers/one.png"},
-{text:"three",image:"../../media/numbers/three.png"},
-{text:"five",image:"../../media/numbers/five.png"},
-{text:"two",image:"../../media/numbers/two.png"}
+{text:"one",image:"../../media/numbers/one.webp"},
+{text:"three",image:"../../media/numbers/three.webp"},
+{text:"five",image:"../../media/numbers/five.webp"},
+{text:"two",image:"../../media/numbers/two.webp"}
 ],
 answer:"three"
 },
@@ -80,10 +103,10 @@ type:"image",
 question:"four کدام است؟",
 speak:"four",
 options:[
-{text:"three",image:"../../media/numbers/three.png"},
-{text:"two",image:"../../media/numbers/two.png"},
-{text:"four",image:"../../media/numbers/four.png"},
-{text:"one",image:"../../media/numbers/one.png"}
+{text:"three",image:"../../media/numbers/three.webp"},
+{text:"two",image:"../../media/numbers/two.webp"},
+{text:"four",image:"../../media/numbers/four.webp"},
+{text:"one",image:"../../media/numbers/one.webp"}
 ],
 answer:"four"
 },
@@ -93,10 +116,10 @@ type:"image",
 question:"five کدام است؟",
 speak:"five",
 options:[
-{text:"four",image:"../../media/numbers/four.png"},
-{text:"one",image:"../../media/numbers/one.png"},
-{text:"two",image:"../../media/numbers/two.png"},
-{text:"five",image:"../../media/numbers/five.png"}
+{text:"four",image:"../../media/numbers/four.webp"},
+{text:"one",image:"../../media/numbers/one.webp"},
+{text:"two",image:"../../media/numbers/two.webp"},
+{text:"five",image:"../../media/numbers/five.webp"}
 ],
 answer:"five"
 },
@@ -106,7 +129,7 @@ answer:"five"
 {
 type:"word",
 question:"این عدد چیست؟",
-image:"../../media/numbers/one.png",
+image:"../../media/numbers/one.webp",
 options:["two","one","three","four"],
 answer:"one"
 },
@@ -114,7 +137,7 @@ answer:"one"
 {
 type:"word",
 question:"این عدد چیست؟",
-image:"../../media/numbers/two.png",
+image:"../../media/numbers/two.webp",
 options:["four","two","five","one"],
 answer:"two"
 },
@@ -122,7 +145,7 @@ answer:"two"
 {
 type:"word",
 question:"این عدد چیست؟",
-image:"../../media/numbers/three.png",
+image:"../../media/numbers/three.webp",
 options:["one","three","five","two"],
 answer:"three"
 },
@@ -130,7 +153,7 @@ answer:"three"
 {
 type:"word",
 question:"این عدد چیست؟",
-image:"../../media/numbers/four.png",
+image:"../../media/numbers/four.webp",
 options:["three","two","four","one"],
 answer:"four"
 },
@@ -138,7 +161,7 @@ answer:"four"
 {
 type:"word",
 question:"این عدد چیست؟",
-image:"../../media/numbers/five.png",
+image:"../../media/numbers/five.webp",
 options:["four","one","two","five"],
 answer:"five"
 },
@@ -185,109 +208,108 @@ options:["four","one","two","five"],
 answer:"five"
 },
 
-/* BUILD EN */
+/* BUILD EN - جدید با تنوع */
 
 {
 type:"build-en",
-speak:"I have one book",
+speak:"I have one cat",
 question:"جمله انگلیسی را بساز:",
-text:"من یک کتاب دارم",
-words:["one","have","book","I"],
-answer:["I","have","one","book"]
-},
-
-{
-type:"build-en",
-speak:"I have two books",
-question:"جمله انگلیسی را بساز:",
-text:"من دو کتاب دارم",
-words:["two","have","books","I"],
-answer:["I","have","two","books"]
+text:"من یک گربه دارم",
+words:["one","have","cat","I"],
+answer:["I","have","one","cat"]
 },
 
 {
 type:"build-en",
-speak:"I have three books",
+speak:"She has two dogs",
 question:"جمله انگلیسی را بساز:",
-text:"من سه کتاب دارم",
-words:["three","have","books","I"],
-answer:["I","have","three","books"]
+text:"او دو سگ دارد",
+words:["has","two","dogs","She"],
+answer:["She","has","two","dogs"]
 },
 
 {
 type:"build-en",
-speak:"I have four books",
+speak:"I see three birds",
 question:"جمله انگلیسی را بساز:",
-text:"من چهار کتاب دارم",
-words:["four","have","books","I"],
-answer:["I","have","four","books"]
+text:"من سه پرنده می‌بینم",
+words:["see","three","birds","I"],
+answer:["I","see","three","birds"]
 },
 
 {
 type:"build-en",
-speak:"I have five books",
+speak:"He has four apples",
 question:"جمله انگلیسی را بساز:",
-text:"من پنج کتاب دارم",
-words:["five","have","books","I"],
-answer:["I","have","five","books"]
-},
-
-/* BUILD FA */
-
-{
-type:"build-fa",
-speak:"I have one book",
-question:"ترجمه را بساز:",
-text:"I have one book",
-words:["دارم","یک","کتاب","من"],
-answer:["من","یک","کتاب","دارم"]
+text:"او چهار سیب دارد",
+words:["has","four","apples","He"],
+answer:["He","has","four","apples"]
 },
 
 {
-type:"build-fa",
-speak:"I have two books",
-question:"ترجمه را بساز:",
-text:"I have two books",
-words:["دارم","دو","کتاب","من"],
-answer:["من","دو","کتاب","دارم"]
+type:"build-en",
+speak:"I eat five breads",
+question:"جمله انگلیسی را بساز:",
+text:"من پنج تا نون می‌خورم",
+words:["eat","five","breads","I"],
+answer:["I","eat","five","breads"]
 },
+
+/* BUILD FA - جدید با تنوع */
 
 {
 type:"build-fa",
-speak:"I have three books",
+speak:"I have one cat",
 question:"ترجمه را بساز:",
-text:"I have three books",
-words:["دارم","سه","کتاب","من"],
-answer:["من","سه","کتاب","دارم"]
+text:"I have one cat",
+words:["دارم","یک","گربه","من"],
+answer:["من","یک","گربه","دارم"]
 },
 
 {
 type:"build-fa",
-speak:"I have four books",
+speak:"She has two dogs",
 question:"ترجمه را بساز:",
-text:"I have four books",
-words:["دارم","چهار","کتاب","من"],
-answer:["من","چهار","کتاب","دارم"]
+text:"She has two dogs",
+words:["دارد","دو","سگ","او"],
+answer:["او","دو","سگ","دارد"]
 },
 
 {
 type:"build-fa",
-speak:"I have five books",
+speak:"I see three birds",
 question:"ترجمه را بساز:",
-text:"I have five books",
-words:["دارم","پنج","کتاب","من"],
-answer:["من","پنج","کتاب","دارم"]
+text:"I see three birds",
+words:["می‌بینم","سه","پرنده","من"],
+answer:["من","سه","پرنده","می‌بینم"]
+},
+
+{
+type:"build-fa",
+speak:"He has four apples",
+question:"ترجمه را بساز:",
+text:"He has four apples",
+words:["دارد","چهار","سیب","او"],
+answer:["او","چهار","سیب","دارد"]
+},
+
+{
+type:"build-fa",
+speak:"I eat five breads",
+question:"ترجمه را بساز:",
+text:"I eat five breads",
+words:["می‌خورم","پنج","نان","من"],
+answer:["من","پنج","نان","می‌خورم"]
 }
 
 ];
 
+
 // =====================================
 // نمایش سوال
 // =====================================
-    // اضافه کردن XP کسب شده به دیتابیس پروفایل در پایان درس
 
-
-    function showQuestion() {
+function showQuestion() {
   if (current >= questions.length) {
     const finalXP = typeof getTotalXP === "function" ? getTotalXP() : xp;
 
@@ -311,6 +333,17 @@ answer:["من","پنج","کتاب","دارم"]
   const content = document.getElementById("question-content");
   const optionsBox = document.getElementById("options");
   const wordBuilder = document.getElementById("word-builder");
+  const repeatBtn = document.getElementById("repeat-audio-btn");
+
+  if (repeatBtn) {
+    if (q.speak) {
+      repeatBtn.style.display = "inline-block";
+      repeatBtn.onclick = () => speak(q.speak);
+    } else {
+      repeatBtn.style.display = "none";
+      repeatBtn.onclick = null;
+    }
+  }
 
   title.innerText = q.question;
   content.innerHTML = "";
@@ -318,7 +351,6 @@ answer:["من","پنج","کتاب","دارم"]
   wordBuilder.innerHTML = "";
 wordBuilder.classList.add("hidden");
 
-  // IMAGE SELECTION
   // IMAGE SELECTION
 if (q.type === "image") {
   optionsBox.classList.add("image-grid");
@@ -351,7 +383,7 @@ shuffleArray(q.options).forEach(opt => {
 
   // AUDIO
   if (q.type === "audio") {
-    content.innerHTML = `<button class="audio-btn" onclick="speak('${q.speak}')">🔊 پخش</button>`;
+    content.innerHTML = "";
 
 shuffleArray(q.options).forEach(opt => {
       let b = document.createElement("button");
@@ -362,8 +394,7 @@ shuffleArray(q.options).forEach(opt => {
     });
   }
 
-  // BUILD ENGLISH
-    // BUILD ENGLISH / FA
+  // BUILD ENGLISH / FA
 
   else if (q.type === "build-en" || q.type === "build-fa") {
   content.innerHTML = `<p>${q.text}</p>`;
@@ -418,6 +449,26 @@ shuffleArray(q.words).forEach(w => {
   });
 }
 
+async function safeAddXP(amount) {
+  try {
+    if (typeof addXP === "function") {
+      await addXP(amount);
+    }
+  } catch (err) {
+    console.warn("ثبت XP رو سرور ناموفق بود (آفلاین یا خطای شبکه):", err);
+  }
+}
+
+async function safeLoseHeart() {
+  try {
+    if (typeof loseHeart === "function") {
+      await loseHeart();
+    }
+  } catch (err) {
+    console.warn("کم کردن قلب رو سرور ناموفق بود (آفلاین یا خطای شبکه):", err);
+  }
+}
+
 async function checkBuild(selected, correct) {
   const s = selected.map(w => w.trim().toLowerCase());
   const c = correct.map(w => w.trim().toLowerCase());
@@ -425,27 +476,16 @@ async function checkBuild(selected, correct) {
   if (JSON.stringify(s) === JSON.stringify(c)) {
     xp += 5;
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
+    await safeAddXP(5);
 
     current++;
     showQuestion();
   } else {
     alert("اشتباه بود! دوباره تلاش کن.");
 
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
+    await safeLoseHeart();
 
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
+    updateHeartDisplay();
 
     if (typeof getHearts === "function" && getHearts() <= 0) {
       document.getElementById("app").innerHTML = `
@@ -465,27 +505,16 @@ async function select(ans) {
   if (String(ans).trim().toLowerCase() === String(correct).trim().toLowerCase()) {
     xp += 5;
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
+    await safeAddXP(5);
 
     current++;
     showQuestion();
   } else {
     alert("اشتباه بود! دوباره تلاش کن.");
 
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
+    await safeLoseHeart();
 
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
+    updateHeartDisplay();
 
     if (typeof getHearts === "function" && getHearts() <= 0) {
       document.getElementById("app").innerHTML = `
@@ -554,6 +583,3 @@ function shuffleArray(arr) {
 
   return array;
 }
-
-
-showQuestion(); 

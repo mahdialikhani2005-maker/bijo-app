@@ -33,15 +33,27 @@
 
     <!-- نب‌بار مشترک: این استایل رو بعداً می‌تونی ببری تو style.css -->
     <style>
-      .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 150; }
+      .bottom-nav {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        z-index: 150;
+      }
       .bottom-nav-inner {
         direction: ltr;
         display: flex;
+        width: 100%;
         justify-content: space-around;
         align-items: center;
         background: white;
         box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
         padding: 10px 0;
+        box-sizing: border-box;
       }
       .bottom-nav .nav-item { opacity: 0.45; text-decoration: none; display: flex; align-items: center; justify-content: center; }
       .bottom-nav .nav-item.active { opacity: 1; }
@@ -120,7 +132,7 @@
         </div>
     </div>
 
-    <!-- نب‌بار مشترک: درس | مرور | خونه | پیشرفت | پروفایل -->
+    <!-- نب‌بار مشترک: درس | مرور | پیشرفت | پروفایل -->
     <footer class="bottom-nav">
       <div class="bottom-nav-inner">
         <a href="#" id="nav-lesson" class="nav-item">
@@ -128,9 +140,6 @@
         </a>
         <a href="#" id="nav-review" class="nav-item">
           <span class="nav-icon-emoji">🔁</span>
-        </a>
-        <a href="#" id="nav-home" class="nav-item">
-          <span class="nav-icon-emoji">🏠</span>
         </a>
         <a href="#" id="nav-progress" class="nav-item">
           <img src="/assets/icons/progress.png" alt="پیشرفت">

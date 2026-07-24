@@ -2,6 +2,21 @@ let current = 0;
 let xp = 0;
 
 function speak(text){
+  // اگه داخل اپ موبایل (Capacitor) اجرا میشه، از موتور صدای خودِ اندروید استفاده کن
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    try {
+      window.Capacitor.Plugins.TextToSpeech.speak({
+        text: text,
+        lang: "en-US",
+        rate: 0.9,
+        category: "ambient"
+      });
+    } catch (err) {
+      console.warn("خطا در پخش صدا (native):", err);
+    }
+    return;
+  }
+
   if (!window.speechSynthesis) return;
 
   const utter = new SpeechSynthesisUtterance(text);
@@ -12,25 +27,33 @@ function speak(text){
   speechSynthesis.speak(utter);
 }
 
-window.onload = function() {
-  if (typeof checkAndRegenHearts === 'function') {
-  checkAndRegenHearts();
-}
-
-    if (typeof getHearts === 'function') {
-        const currentHearts = getHearts();
-        const heartElement = document.getElementById("heart-count");
-        if (heartElement) {
-            heartElement.textContent = currentHearts;
-        }
-        
-        // اگر قلب کاربر 0 بود، اجازه شروع درس را نده (اختیاری)
-        if (currentHearts <= 0) {
-            alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
-            window.location.href = "../home.html";
-        }
+window.onload = async function() {
+  // قبل از هر چیز، اطلاعات واقعی کاربر (قلب، XP) رو از سرور می‌گیریم
+  if (typeof initUserData === "function") {
+    try {
+      await initUserData();
+    } catch (err) {
+      console.warn("گرفتن اطلاعات کاربر ناموفق بود:", err);
     }
+  }
+
+  updateHeartDisplay();
+
+  if (typeof getHearts === "function" && getHearts() <= 0) {
+    alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
+    window.location.href = "../home.html";
+    return;
+  }
+
+  showQuestion();
 };
+
+function updateHeartDisplay() {
+  const heartElement = document.getElementById("heart-count");
+  if (heartElement && typeof getHearts === "function") {
+    heartElement.textContent = getHearts();
+  }
+}
 
 const questions = [
 
@@ -41,10 +64,10 @@ type:"image",
 question:"tomato کدام است؟",
 speak:"tomato",
 options:[
-{text:"potato",image:"../../media/vegetables/potato.png"},
-{text:"tomato",image:"../../media/vegetables/tomato.png"},
-{text:"carrot",image:"../../media/vegetables/carrot.png"},
-{text:"onion",image:"../../media/vegetables/onion.png"}
+{text:"potato",image:"../../media/vegetables/potato.webp"},
+{text:"tomato",image:"../../media/vegetables/tomato.webp"},
+{text:"carrot",image:"../../media/vegetables/carrot.webp"},
+{text:"onion",image:"../../media/vegetables/onion.webp"}
 ],
 answer:"tomato"
 },
@@ -54,10 +77,10 @@ type:"image",
 question:"potato کدام است؟",
 speak:"potato",
 options:[
-{text:"onion",image:"../../media/vegetables/onion.png"},
-{text:"potato",image:"../../media/vegetables/potato.png"},
-{text:"cucumber",image:"../../media/vegetables/cucumber.png"},
-{text:"tomato",image:"../../media/vegetables/tomato.png"}
+{text:"onion",image:"../../media/vegetables/onion.webp"},
+{text:"potato",image:"../../media/vegetables/potato.webp"},
+{text:"cucumber",image:"../../media/vegetables/cucumber.webp"},
+{text:"tomato",image:"../../media/vegetables/tomato.webp"}
 ],
 answer:"potato"
 },
@@ -67,10 +90,10 @@ type:"image",
 question:"carrot کدام است؟",
 speak:"carrot",
 options:[
-{text:"tomato",image:"../../media/vegetables/tomato.png"},
-{text:"carrot",image:"../../media/vegetables/carrot.png"},
-{text:"cucumber",image:"../../media/vegetables/cucumber.png"},
-{text:"potato",image:"../../media/vegetables/potato.png"}
+{text:"tomato",image:"../../media/vegetables/tomato.webp"},
+{text:"carrot",image:"../../media/vegetables/carrot.webp"},
+{text:"cucumber",image:"../../media/vegetables/cucumber.webp"},
+{text:"potato",image:"../../media/vegetables/potato.webp"}
 ],
 answer:"carrot"
 },
@@ -80,10 +103,10 @@ type:"image",
 question:"onion کدام است؟",
 speak:"onion",
 options:[
-{text:"carrot",image:"../../media/vegetables/carrot.png"},
-{text:"potato",image:"../../media/vegetables/potato.png"},
-{text:"onion",image:"../../media/vegetables/onion.png"},
-{text:"tomato",image:"../../media/vegetables/tomato.png"}
+{text:"carrot",image:"../../media/vegetables/carrot.webp"},
+{text:"potato",image:"../../media/vegetables/potato.webp"},
+{text:"onion",image:"../../media/vegetables/onion.webp"},
+{text:"tomato",image:"../../media/vegetables/tomato.webp"}
 ],
 answer:"onion"
 },
@@ -93,10 +116,10 @@ type:"image",
 question:"cucumber کدام است؟",
 speak:"cucumber",
 options:[
-{text:"onion",image:"../../media/vegetables/onion.png"},
-{text:"tomato",image:"../../media/vegetables/tomato.png"},
-{text:"potato",image:"../../media/vegetables/potato.png"},
-{text:"cucumber",image:"../../media/vegetables/cucumber.png"}
+{text:"onion",image:"../../media/vegetables/onion.webp"},
+{text:"tomato",image:"../../media/vegetables/tomato.webp"},
+{text:"potato",image:"../../media/vegetables/potato.webp"},
+{text:"cucumber",image:"../../media/vegetables/cucumber.webp"}
 ],
 answer:"cucumber"
 },
@@ -106,7 +129,7 @@ answer:"cucumber"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/vegetables/tomato.png",
+image:"../../media/vegetables/tomato.webp",
 options:["potato","tomato","carrot","onion"],
 answer:"tomato"
 },
@@ -114,7 +137,7 @@ answer:"tomato"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/vegetables/potato.png",
+image:"../../media/vegetables/potato.webp",
 options:["onion","potato","cucumber","tomato"],
 answer:"potato"
 },
@@ -122,7 +145,7 @@ answer:"potato"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/vegetables/carrot.png",
+image:"../../media/vegetables/carrot.webp",
 options:["tomato","carrot","cucumber","potato"],
 answer:"carrot"
 },
@@ -130,7 +153,7 @@ answer:"carrot"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/vegetables/onion.png",
+image:"../../media/vegetables/onion.webp",
 options:["carrot","potato","onion","tomato"],
 answer:"onion"
 },
@@ -138,7 +161,7 @@ answer:"onion"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/vegetables/cucumber.png",
+image:"../../media/vegetables/cucumber.webp",
 options:["onion","tomato","potato","cucumber"],
 answer:"cucumber"
 },
@@ -185,24 +208,24 @@ options:["onion","tomato","potato","cucumber"],
 answer:"cucumber"
 },
 
-/* BUILD EN */
+/* BUILD EN - جدید با تنوع */
 
 {
 type:"build-en",
-speak:"This is a tomato",
+speak:"I like tomatoes",
 question:"جمله انگلیسی را بساز:",
-text:"این یک گوجه است",
-words:["tomato","a","is","This"],
-answer:["This","is","a","tomato"]
+text:"من گوجه‌فرنگی دوست دارم",
+words:["like","tomatoes","I"],
+answer:["I","like","tomatoes"]
 },
 
 {
 type:"build-en",
-speak:"This is a potato",
+speak:"She eats a potato",
 question:"جمله انگلیسی را بساز:",
-text:"این یک سیب‌زمینی است",
-words:["potato","a","is","This"],
-answer:["This","is","a","potato"]
+text:"او یک سیب‌زمینی می‌خورد",
+words:["eats","a","potato","She"],
+answer:["She","eats","a","potato"]
 },
 
 {
@@ -210,46 +233,46 @@ type:"build-en",
 speak:"This is a carrot",
 question:"جمله انگلیسی را بساز:",
 text:"این یک هویج است",
-words:["carrot","a","is","This"],
+words:["is","a","carrot","This"],
 answer:["This","is","a","carrot"]
 },
 
 {
 type:"build-en",
-speak:"This is an onion",
+speak:"I have an onion",
 question:"جمله انگلیسی را بساز:",
-text:"این یک پیاز است",
-words:["onion","an","is","This"],
-answer:["This","is","an","onion"]
+text:"من یک پیاز دارم",
+words:["have","an","onion","I"],
+answer:["I","have","an","onion"]
 },
 
 {
 type:"build-en",
-speak:"This is a cucumber",
+speak:"He eats a cucumber",
 question:"جمله انگلیسی را بساز:",
-text:"این یک خیار است",
-words:["cucumber","a","is","This"],
-answer:["This","is","a","cucumber"]
+text:"او یک خیار می‌خورد",
+words:["eats","a","cucumber","He"],
+answer:["He","eats","a","cucumber"]
 },
 
-/* BUILD FA */
+/* BUILD FA - جدید با تنوع */
 
 {
 type:"build-fa",
-speak:"This is a tomato",
+speak:"I like tomatoes",
 question:"ترجمه را بساز:",
-text:"This is a tomato",
-words:["است","گوجه","یک","این"],
-answer:["این","یک","گوجه","است"]
+text:"I like tomatoes",
+words:["دارم","دوست","گوجه‌فرنگی","من"],
+answer:["من","گوجه‌فرنگی","دوست","دارم"]
 },
 
 {
 type:"build-fa",
-speak:"This is a potato",
+speak:"She eats a potato",
 question:"ترجمه را بساز:",
-text:"This is a potato",
-words:["است","سیب‌زمینی","یک","این"],
-answer:["این","یک","سیب‌زمینی","است"]
+text:"She eats a potato",
+words:["می‌خورد","سیب‌زمینی","یک","او"],
+answer:["او","یک","سیب‌زمینی","می‌خورد"]
 },
 
 {
@@ -263,31 +286,30 @@ answer:["این","یک","هویج","است"]
 
 {
 type:"build-fa",
-speak:"This is an onion",
+speak:"I have an onion",
 question:"ترجمه را بساز:",
-text:"This is an onion",
-words:["است","پیاز","یک","این"],
-answer:["این","یک","پیاز","است"]
+text:"I have an onion",
+words:["دارم","پیاز","یک","من"],
+answer:["من","یک","پیاز","دارم"]
 },
 
 {
 type:"build-fa",
-speak:"This is a cucumber",
+speak:"He eats a cucumber",
 question:"ترجمه را بساز:",
-text:"This is a cucumber",
-words:["است","خیار","یک","این"],
-answer:["این","یک","خیار","است"]
+text:"He eats a cucumber",
+words:["می‌خورد","خیار","یک","او"],
+answer:["او","یک","خیار","می‌خورد"]
 }
 
 ];
 
+
 // =====================================
 // نمایش سوال
 // =====================================
-    // اضافه کردن XP کسب شده به دیتابیس پروفایل در پایان درس
 
-
-    function showQuestion() {
+function showQuestion() {
   if (current >= questions.length) {
     const finalXP = typeof getTotalXP === "function" ? getTotalXP() : xp;
 
@@ -311,6 +333,17 @@ answer:["این","یک","خیار","است"]
   const content = document.getElementById("question-content");
   const optionsBox = document.getElementById("options");
   const wordBuilder = document.getElementById("word-builder");
+  const repeatBtn = document.getElementById("repeat-audio-btn");
+
+  if (repeatBtn) {
+    if (q.speak) {
+      repeatBtn.style.display = "inline-block";
+      repeatBtn.onclick = () => speak(q.speak);
+    } else {
+      repeatBtn.style.display = "none";
+      repeatBtn.onclick = null;
+    }
+  }
 
   title.innerText = q.question;
   content.innerHTML = "";
@@ -318,7 +351,6 @@ answer:["این","یک","خیار","است"]
   wordBuilder.innerHTML = "";
 wordBuilder.classList.add("hidden");
 
-  // IMAGE SELECTION
   // IMAGE SELECTION
 if (q.type === "image") {
   optionsBox.classList.add("image-grid");
@@ -351,7 +383,7 @@ shuffleArray(q.options).forEach(opt => {
 
   // AUDIO
   if (q.type === "audio") {
-    content.innerHTML = `<button class="audio-btn" onclick="speak('${q.speak}')">🔊 پخش</button>`;
+    content.innerHTML = "";
 
 shuffleArray(q.options).forEach(opt => {
       let b = document.createElement("button");
@@ -362,8 +394,7 @@ shuffleArray(q.options).forEach(opt => {
     });
   }
 
-  // BUILD ENGLISH
-    // BUILD ENGLISH / FA
+  // BUILD ENGLISH / FA
 
   else if (q.type === "build-en" || q.type === "build-fa") {
   content.innerHTML = `<p>${q.text}</p>`;
@@ -418,6 +449,26 @@ shuffleArray(q.words).forEach(w => {
   });
 }
 
+async function safeAddXP(amount) {
+  try {
+    if (typeof addXP === "function") {
+      await addXP(amount);
+    }
+  } catch (err) {
+    console.warn("ثبت XP رو سرور ناموفق بود (آفلاین یا خطای شبکه):", err);
+  }
+}
+
+async function safeLoseHeart() {
+  try {
+    if (typeof loseHeart === "function") {
+      await loseHeart();
+    }
+  } catch (err) {
+    console.warn("کم کردن قلب رو سرور ناموفق بود (آفلاین یا خطای شبکه):", err);
+  }
+}
+
 async function checkBuild(selected, correct) {
   const s = selected.map(w => w.trim().toLowerCase());
   const c = correct.map(w => w.trim().toLowerCase());
@@ -425,27 +476,16 @@ async function checkBuild(selected, correct) {
   if (JSON.stringify(s) === JSON.stringify(c)) {
     xp += 5;
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
+    await safeAddXP(5);
 
     current++;
     showQuestion();
   } else {
     alert("اشتباه بود! دوباره تلاش کن.");
 
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
+    await safeLoseHeart();
 
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
+    updateHeartDisplay();
 
     if (typeof getHearts === "function" && getHearts() <= 0) {
       document.getElementById("app").innerHTML = `
@@ -465,27 +505,16 @@ async function select(ans) {
   if (String(ans).trim().toLowerCase() === String(correct).trim().toLowerCase()) {
     xp += 5;
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
+    await safeAddXP(5);
 
     current++;
     showQuestion();
   } else {
     alert("اشتباه بود! دوباره تلاش کن.");
 
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
+    await safeLoseHeart();
 
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
+    updateHeartDisplay();
 
     if (typeof getHearts === "function" && getHearts() <= 0) {
       document.getElementById("app").innerHTML = `
@@ -554,6 +583,3 @@ function shuffleArray(arr) {
 
   return array;
 }
-
-
-showQuestion(); 
