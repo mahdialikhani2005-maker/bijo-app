@@ -2,6 +2,21 @@ let current = 0;
 let xp = 0;
 
 function speak(text){
+  // اگه داخل اپ موبایل (Capacitor) اجرا میشه، از موتور صدای خودِ اندروید استفاده کن
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    try {
+      window.Capacitor.Plugins.TextToSpeech.speak({
+        text: text,
+        lang: "en-US",
+        rate: 0.9,
+        category: "ambient"
+      });
+    } catch (err) {
+      console.warn("خطا در پخش صدا (native):", err);
+    }
+    return;
+  }
+
   if (!window.speechSynthesis) return;
 
   const utter = new SpeechSynthesisUtterance(text);
@@ -12,25 +27,33 @@ function speak(text){
   speechSynthesis.speak(utter);
 }
 
-window.onload = function() {
-  if (typeof checkAndRegenHearts === 'function') {
-  checkAndRegenHearts();
-}
-
-    if (typeof getHearts === 'function') {
-        const currentHearts = getHearts();
-        const heartElement = document.getElementById("heart-count");
-        if (heartElement) {
-            heartElement.textContent = currentHearts;
-        }
-        
-        // اگر قلب کاربر 0 بود، اجازه شروع درس را نده (اختیاری)
-        if (currentHearts <= 0) {
-            alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
-            window.location.href = "../home.html";
-        }
+window.onload = async function() {
+  // قبل از هر چیز، اطلاعات واقعی کاربر (قلب، XP) رو از سرور می‌گیریم
+  if (typeof initUserData === "function") {
+    try {
+      await initUserData();
+    } catch (err) {
+      console.warn("گرفتن اطلاعات کاربر ناموفق بود:", err);
     }
+  }
+
+  updateHeartDisplay();
+
+  if (typeof getHearts === "function" && getHearts() <= 0) {
+    alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
+    window.location.href = "../home.html";
+    return;
+  }
+
+  showQuestion();
 };
+
+function updateHeartDisplay() {
+  const heartElement = document.getElementById("heart-count");
+  if (heartElement && typeof getHearts === "function") {
+    heartElement.textContent = getHearts();
+  }
+}
 
 const questions = [
 
@@ -41,10 +64,10 @@ type:"image",
 question:"happy کدام است؟",
 speak:"happy",
 options:[
-{text:"sad",image:"../../media/feelings/sad.png"},
-{text:"happy",image:"../../media/feelings/happy.png"},
-{text:"angry",image:"../../media/feelings/angry.png"},
-{text:"tired",image:"../../media/feelings/tired.png"}
+{text:"sad",image:"../../media/feelings/sad.webp"},
+{text:"happy",image:"../../media/feelings/happy.webp"},
+{text:"angry",image:"../../media/feelings/angry.webp"},
+{text:"tired",image:"../../media/feelings/tired.webp"}
 ],
 answer:"happy"
 },
@@ -54,10 +77,10 @@ type:"image",
 question:"sad کدام است؟",
 speak:"sad",
 options:[
-{text:"tired",image:"../../media/feelings/tired.png"},
-{text:"sad",image:"../../media/feelings/sad.png"},
-{text:"hungry",image:"../../media/feelings/hungry.png"},
-{text:"happy",image:"../../media/feelings/happy.png"}
+{text:"tired",image:"../../media/feelings/tired.webp"},
+{text:"sad",image:"../../media/feelings/sad.webp"},
+{text:"hungry",image:"../../media/feelings/hungry.webp"},
+{text:"happy",image:"../../media/feelings/happy.webp"}
 ],
 answer:"sad"
 },
@@ -67,10 +90,10 @@ type:"image",
 question:"angry کدام است؟",
 speak:"angry",
 options:[
-{text:"happy",image:"../../media/feelings/happy.png"},
-{text:"angry",image:"../../media/feelings/angry.png"},
-{text:"hungry",image:"../../media/feelings/hungry.png"},
-{text:"sad",image:"../../media/feelings/sad.png"}
+{text:"happy",image:"../../media/feelings/happy.webp"},
+{text:"angry",image:"../../media/feelings/angry.webp"},
+{text:"hungry",image:"../../media/feelings/hungry.webp"},
+{text:"sad",image:"../../media/feelings/sad.webp"}
 ],
 answer:"angry"
 },
@@ -80,10 +103,10 @@ type:"image",
 question:"tired کدام است؟",
 speak:"tired",
 options:[
-{text:"angry",image:"../../media/feelings/angry.png"},
-{text:"sad",image:"../../media/feelings/sad.png"},
-{text:"tired",image:"../../media/feelings/tired.png"},
-{text:"happy",image:"../../media/feelings/happy.png"}
+{text:"angry",image:"../../media/feelings/angry.webp"},
+{text:"sad",image:"../../media/feelings/sad.webp"},
+{text:"tired",image:"../../media/feelings/tired.webp"},
+{text:"happy",image:"../../media/feelings/happy.webp"}
 ],
 answer:"tired"
 },
@@ -93,10 +116,10 @@ type:"image",
 question:"hungry کدام است؟",
 speak:"hungry",
 options:[
-{text:"tired",image:"../../media/feelings/tired.png"},
-{text:"happy",image:"../../media/feelings/happy.png"},
-{text:"sad",image:"../../media/feelings/sad.png"},
-{text:"hungry",image:"../../media/feelings/hungry.png"}
+{text:"tired",image:"../../media/feelings/tired.webp"},
+{text:"happy",image:"../../media/feelings/happy.webp"},
+{text:"sad",image:"../../media/feelings/sad.webp"},
+{text:"hungry",image:"../../media/feelings/hungry.webp"}
 ],
 answer:"hungry"
 },
@@ -106,7 +129,7 @@ answer:"hungry"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/feelings/happy.png",
+image:"../../media/feelings/happy.webp",
 options:["sad","happy","angry","tired"],
 answer:"happy"
 },
@@ -114,7 +137,7 @@ answer:"happy"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/feelings/sad.png",
+image:"../../media/feelings/sad.webp",
 options:["tired","sad","hungry","happy"],
 answer:"sad"
 },
@@ -122,7 +145,7 @@ answer:"sad"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/feelings/angry.png",
+image:"../../media/feelings/angry.webp",
 options:["happy","angry","hungry","sad"],
 answer:"angry"
 },
@@ -130,7 +153,7 @@ answer:"angry"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/feelings/tired.png",
+image:"../../media/feelings/tired.webp",
 options:["angry","sad","tired","happy"],
 answer:"tired"
 },
@@ -138,7 +161,7 @@ answer:"tired"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/feelings/hungry.png",
+image:"../../media/feelings/hungry.webp",
 options:["tired","happy","sad","hungry"],
 answer:"hungry"
 },
@@ -185,7 +208,7 @@ options:["tired","happy","sad","hungry"],
 answer:"hungry"
 },
 
-/* BUILD EN */
+/* BUILD EN - جدید با تنوع */
 
 {
 type:"build-en",
@@ -198,41 +221,41 @@ answer:["I","am","happy"]
 
 {
 type:"build-en",
-speak:"I am sad",
+speak:"She is sad",
 question:"جمله انگلیسی را بساز:",
-text:"من ناراحت هستم",
-words:["sad","am","I"],
-answer:["I","am","sad"]
+text:"او ناراحت است",
+words:["sad","is","She"],
+answer:["She","is","sad"]
 },
 
 {
 type:"build-en",
-speak:"I am angry",
+speak:"He is angry",
 question:"جمله انگلیسی را بساز:",
-text:"من عصبانی هستم",
-words:["angry","am","I"],
-answer:["I","am","angry"]
+text:"او عصبانی است",
+words:["angry","is","He"],
+answer:["He","is","angry"]
 },
 
 {
 type:"build-en",
-speak:"I am tired",
+speak:"We are tired",
 question:"جمله انگلیسی را بساز:",
-text:"من خسته هستم",
-words:["tired","am","I"],
-answer:["I","am","tired"]
+text:"ما خسته هستیم",
+words:["tired","are","We"],
+answer:["We","are","tired"]
 },
 
 {
 type:"build-en",
-speak:"I am hungry",
+speak:"They are hungry",
 question:"جمله انگلیسی را بساز:",
-text:"من گرسنه هستم",
-words:["hungry","am","I"],
-answer:["I","am","hungry"]
+text:"آنها گرسنه هستند",
+words:["hungry","are","They"],
+answer:["They","are","hungry"]
 },
 
-/* BUILD FA */
+/* BUILD FA - جدید با تنوع */
 
 {
 type:"build-fa",
@@ -245,49 +268,48 @@ answer:["من","خوشحال","هستم"]
 
 {
 type:"build-fa",
-speak:"I am sad",
+speak:"She is sad",
 question:"ترجمه را بساز:",
-text:"I am sad",
-words:["هستم","ناراحت","من"],
-answer:["من","ناراحت","هستم"]
+text:"She is sad",
+words:["است","ناراحت","او"],
+answer:["او","ناراحت","است"]
 },
 
 {
 type:"build-fa",
-speak:"I am angry",
+speak:"He is angry",
 question:"ترجمه را بساز:",
-text:"I am angry",
-words:["هستم","عصبانی","من"],
-answer:["من","عصبانی","هستم"]
+text:"He is angry",
+words:["است","عصبانی","او"],
+answer:["او","عصبانی","است"]
 },
 
 {
 type:"build-fa",
-speak:"I am tired",
+speak:"We are tired",
 question:"ترجمه را بساز:",
-text:"I am tired",
-words:["هستم","خسته","من"],
-answer:["من","خسته","هستم"]
+text:"We are tired",
+words:["هستیم","خسته","ما"],
+answer:["ما","خسته","هستیم"]
 },
 
 {
 type:"build-fa",
-speak:"I am hungry",
+speak:"They are hungry",
 question:"ترجمه را بساز:",
-text:"I am hungry",
-words:["هستم","گرسنه","من"],
-answer:["من","گرسنه","هستم"]
+text:"They are hungry",
+words:["هستند","گرسنه","آنها"],
+answer:["آنها","گرسنه","هستند"]
 }
 
 ];
 
+
 // =====================================
 // نمایش سوال
 // =====================================
-    // اضافه کردن XP کسب شده به دیتابیس پروفایل در پایان درس
 
-
-    function showQuestion() {
+function showQuestion() {
   if (current >= questions.length) {
     const finalXP = typeof getTotalXP === "function" ? getTotalXP() : xp;
 
@@ -311,6 +333,17 @@ answer:["من","گرسنه","هستم"]
   const content = document.getElementById("question-content");
   const optionsBox = document.getElementById("options");
   const wordBuilder = document.getElementById("word-builder");
+  const repeatBtn = document.getElementById("repeat-audio-btn");
+
+  if (repeatBtn) {
+    if (q.speak) {
+      repeatBtn.style.display = "inline-block";
+      repeatBtn.onclick = () => speak(q.speak);
+    } else {
+      repeatBtn.style.display = "none";
+      repeatBtn.onclick = null;
+    }
+  }
 
   title.innerText = q.question;
   content.innerHTML = "";
@@ -318,7 +351,6 @@ answer:["من","گرسنه","هستم"]
   wordBuilder.innerHTML = "";
 wordBuilder.classList.add("hidden");
 
-  // IMAGE SELECTION
   // IMAGE SELECTION
 if (q.type === "image") {
   optionsBox.classList.add("image-grid");
@@ -351,7 +383,7 @@ shuffleArray(q.options).forEach(opt => {
 
   // AUDIO
   if (q.type === "audio") {
-    content.innerHTML = `<button class="audio-btn" onclick="speak('${q.speak}')">🔊 پخش</button>`;
+    content.innerHTML = "";
 
 shuffleArray(q.options).forEach(opt => {
       let b = document.createElement("button");
@@ -362,8 +394,7 @@ shuffleArray(q.options).forEach(opt => {
     });
   }
 
-  // BUILD ENGLISH
-    // BUILD ENGLISH / FA
+  // BUILD ENGLISH / FA
 
   else if (q.type === "build-en" || q.type === "build-fa") {
   content.innerHTML = `<p>${q.text}</p>`;
@@ -418,6 +449,26 @@ shuffleArray(q.words).forEach(w => {
   });
 }
 
+async function safeAddXP(amount) {
+  try {
+    if (typeof addXP === "function") {
+      await addXP(amount);
+    }
+  } catch (err) {
+    console.warn("ثبت XP رو سرور ناموفق بود (آفلاین یا خطای شبکه):", err);
+  }
+}
+
+async function safeLoseHeart() {
+  try {
+    if (typeof loseHeart === "function") {
+      await loseHeart();
+    }
+  } catch (err) {
+    console.warn("کم کردن قلب رو سرور ناموفق بود (آفلاین یا خطای شبکه):", err);
+  }
+}
+
 async function checkBuild(selected, correct) {
   const s = selected.map(w => w.trim().toLowerCase());
   const c = correct.map(w => w.trim().toLowerCase());
@@ -425,27 +476,16 @@ async function checkBuild(selected, correct) {
   if (JSON.stringify(s) === JSON.stringify(c)) {
     xp += 5;
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
+    await safeAddXP(5);
 
     current++;
     showQuestion();
   } else {
     alert("اشتباه بود! دوباره تلاش کن.");
 
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
+    await safeLoseHeart();
 
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
+    updateHeartDisplay();
 
     if (typeof getHearts === "function" && getHearts() <= 0) {
       document.getElementById("app").innerHTML = `
@@ -465,27 +505,16 @@ async function select(ans) {
   if (String(ans).trim().toLowerCase() === String(correct).trim().toLowerCase()) {
     xp += 5;
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
+    await safeAddXP(5);
 
     current++;
     showQuestion();
   } else {
     alert("اشتباه بود! دوباره تلاش کن.");
 
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
+    await safeLoseHeart();
 
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
+    updateHeartDisplay();
 
     if (typeof getHearts === "function" && getHearts() <= 0) {
       document.getElementById("app").innerHTML = `
@@ -554,6 +583,3 @@ function shuffleArray(arr) {
 
   return array;
 }
-
-
-showQuestion(); 

@@ -2,6 +2,21 @@ let current = 0;
 let xp = 0;
 
 function speak(text){
+  // اگه داخل اپ موبایل (Capacitor) اجرا میشه، از موتور صدای خودِ اندروید استفاده کن
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    try {
+      window.Capacitor.Plugins.TextToSpeech.speak({
+        text: text,
+        lang: "en-US",
+        rate: 0.9,
+        category: "ambient"
+      });
+    } catch (err) {
+      console.warn("خطا در پخش صدا (native):", err);
+    }
+    return;
+  }
+
   if (!window.speechSynthesis) return;
 
   const utter = new SpeechSynthesisUtterance(text);
@@ -12,25 +27,33 @@ function speak(text){
   speechSynthesis.speak(utter);
 }
 
-window.onload = function() {
-  if (typeof checkAndRegenHearts === 'function') {
-  checkAndRegenHearts();
-}
-
-    if (typeof getHearts === 'function') {
-        const currentHearts = getHearts();
-        const heartElement = document.getElementById("heart-count");
-        if (heartElement) {
-            heartElement.textContent = currentHearts;
-        }
-        
-        // اگر قلب کاربر 0 بود، اجازه شروع درس را نده (اختیاری)
-        if (currentHearts <= 0) {
-            alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
-            window.location.href = "../home.html";
-        }
+window.onload = async function() {
+  // قبل از هر چیز، اطلاعات واقعی کاربر (قلب، XP) رو از سرور می‌گیریم
+  if (typeof initUserData === "function") {
+    try {
+      await initUserData();
+    } catch (err) {
+      console.warn("گرفتن اطلاعات کاربر ناموفق بود:", err);
     }
+  }
+
+  updateHeartDisplay();
+
+  if (typeof getHearts === "function" && getHearts() <= 0) {
+    alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
+    window.location.href = "../home.html";
+    return;
+  }
+
+  showQuestion();
 };
+
+function updateHeartDisplay() {
+  const heartElement = document.getElementById("heart-count");
+  if (heartElement && typeof getHearts === "function") {
+    heartElement.textContent = getHearts();
+  }
+}
 
 const questions = [
 
@@ -41,10 +64,10 @@ type:"image",
 question:"eat کدام است؟",
 speak:"eat",
 options:[
-{text:"sleep",image:"../../media/actions/sleep.png"},
-{text:"eat",image:"../../media/actions/eat.png"},
-{text:"walk",image:"../../media/actions/walk.png"},
-{text:"read",image:"../../media/actions/read.png"}
+{text:"sleep",image:"../../media/actions/sleep.webp"},
+{text:"eat",image:"../../media/actions/eat.webp"},
+{text:"walk",image:"../../media/actions/walk.webp"},
+{text:"read",image:"../../media/actions/read.webp"}
 ],
 answer:"eat"
 },
@@ -54,10 +77,10 @@ type:"image",
 question:"sleep کدام است؟",
 speak:"sleep",
 options:[
-{text:"write",image:"../../media/actions/write.png"},
-{text:"sleep",image:"../../media/actions/sleep.png"},
-{text:"eat",image:"../../media/actions/eat.png"},
-{text:"walk",image:"../../media/actions/walk.png"}
+{text:"write",image:"../../media/actions/write.webp"},
+{text:"sleep",image:"../../media/actions/sleep.webp"},
+{text:"eat",image:"../../media/actions/eat.webp"},
+{text:"walk",image:"../../media/actions/walk.webp"}
 ],
 answer:"sleep"
 },
@@ -67,10 +90,10 @@ type:"image",
 question:"walk کدام است؟",
 speak:"walk",
 options:[
-{text:"eat",image:"../../media/actions/eat.png"},
-{text:"walk",image:"../../media/actions/walk.png"},
-{text:"write",image:"../../media/actions/write.png"},
-{text:"sleep",image:"../../media/actions/sleep.png"}
+{text:"eat",image:"../../media/actions/eat.webp"},
+{text:"walk",image:"../../media/actions/walk.webp"},
+{text:"write",image:"../../media/actions/write.webp"},
+{text:"sleep",image:"../../media/actions/sleep.webp"}
 ],
 answer:"walk"
 },
@@ -80,10 +103,10 @@ type:"image",
 question:"read کدام است؟",
 speak:"read",
 options:[
-{text:"walk",image:"../../media/actions/walk.png"},
-{text:"sleep",image:"../../media/actions/sleep.png"},
-{text:"read",image:"../../media/actions/read.png"},
-{text:"eat",image:"../../media/actions/eat.png"}
+{text:"walk",image:"../../media/actions/walk.webp"},
+{text:"sleep",image:"../../media/actions/sleep.webp"},
+{text:"read",image:"../../media/actions/read.webp"},
+{text:"eat",image:"../../media/actions/eat.webp"}
 ],
 answer:"read"
 },
@@ -93,10 +116,10 @@ type:"image",
 question:"write کدام است؟",
 speak:"write",
 options:[
-{text:"read",image:"../../media/actions/read.png"},
-{text:"eat",image:"../../media/actions/eat.png"},
-{text:"sleep",image:"../../media/actions/sleep.png"},
-{text:"write",image:"../../media/actions/write.png"}
+{text:"read",image:"../../media/actions/read.webp"},
+{text:"eat",image:"../../media/actions/eat.webp"},
+{text:"sleep",image:"../../media/actions/sleep.webp"},
+{text:"write",image:"../../media/actions/write.webp"}
 ],
 answer:"write"
 },
@@ -106,7 +129,7 @@ answer:"write"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/actions/eat.png",
+image:"../../media/actions/eat.webp",
 options:["sleep","eat","walk","read"],
 answer:"eat"
 },
@@ -114,7 +137,7 @@ answer:"eat"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/actions/sleep.png",
+image:"../../media/actions/sleep.webp",
 options:["write","sleep","eat","walk"],
 answer:"sleep"
 },
@@ -122,7 +145,7 @@ answer:"sleep"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/actions/walk.png",
+image:"../../media/actions/walk.webp",
 options:["eat","walk","write","sleep"],
 answer:"walk"
 },
@@ -130,7 +153,7 @@ answer:"walk"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/actions/read.png",
+image:"../../media/actions/read.webp",
 options:["walk","sleep","read","eat"],
 answer:"read"
 },
@@ -138,7 +161,7 @@ answer:"read"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/actions/write.png",
+image:"../../media/actions/write.webp",
 options:["read","eat","sleep","write"],
 answer:"write"
 },
@@ -185,7 +208,7 @@ options:["read","eat","sleep","write"],
 answer:"write"
 },
 
-/* BUILD EN */
+/* BUILD EN - جدید با تنوع */
 
 {
 type:"build-en",
@@ -198,20 +221,20 @@ answer:["I","eat","bread"]
 
 {
 type:"build-en",
-speak:"I sleep at night",
+speak:"She sleeps at night",
 question:"جمله انگلیسی را بساز:",
-text:"من شب می‌خوابم",
-words:["sleep","night","at","I"],
-answer:["I","sleep","at","night"]
+text:"او شب می‌خوابد",
+words:["sleeps","at","night","She"],
+answer:["She","sleeps","at","night"]
 },
 
 {
 type:"build-en",
-speak:"I walk to school",
+speak:"He walks to school",
 question:"جمله انگلیسی را بساز:",
-text:"من به مدرسه راه می‌روم",
-words:["walk","school","to","I"],
-answer:["I","walk","to","school"]
+text:"او به مدرسه راه می‌رود",
+words:["walks","to","school","He"],
+answer:["He","walks","to","school"]
 },
 
 {
@@ -232,7 +255,7 @@ words:["write","letter","a","I"],
 answer:["I","write","a","letter"]
 },
 
-/* BUILD FA */
+/* BUILD FA - جدید با تنوع */
 
 {
 type:"build-fa",
@@ -245,20 +268,20 @@ answer:["من","نان","می‌خورم"]
 
 {
 type:"build-fa",
-speak:"I sleep at night",
+speak:"She sleeps at night",
 question:"ترجمه را بساز:",
-text:"I sleep at night",
-words:["می‌خوابم","شب","در","من"],
-answer:["من","شب","می‌خوابم"]
+text:"She sleeps at night",
+words:["می‌خوابد","شب","در","او"],
+answer:["او","شب","می‌خوابد"]
 },
 
 {
 type:"build-fa",
-speak:"I walk to school",
+speak:"He walks to school",
 question:"ترجمه را بساز:",
-text:"I walk to school",
-words:["می‌روم","مدرسه","به","من"],
-answer:["من","به","مدرسه","می‌روم"]
+text:"He walks to school",
+words:["می‌رود","مدرسه","به","او"],
+answer:["او","به","مدرسه","می‌رود"]
 },
 
 {
@@ -285,10 +308,8 @@ answer:["من","یک","نامه","می‌نویسم"]
 // =====================================
 // نمایش سوال
 // =====================================
-    // اضافه کردن XP کسب شده به دیتابیس پروفایل در پایان درس
 
-
-    function showQuestion() {
+function showQuestion() {
   if (current >= questions.length) {
     const finalXP = typeof getTotalXP === "function" ? getTotalXP() : xp;
 
@@ -312,6 +333,17 @@ answer:["من","یک","نامه","می‌نویسم"]
   const content = document.getElementById("question-content");
   const optionsBox = document.getElementById("options");
   const wordBuilder = document.getElementById("word-builder");
+  const repeatBtn = document.getElementById("repeat-audio-btn");
+
+  if (repeatBtn) {
+    if (q.speak) {
+      repeatBtn.style.display = "inline-block";
+      repeatBtn.onclick = () => speak(q.speak);
+    } else {
+      repeatBtn.style.display = "none";
+      repeatBtn.onclick = null;
+    }
+  }
 
   title.innerText = q.question;
   content.innerHTML = "";
@@ -319,7 +351,6 @@ answer:["من","یک","نامه","می‌نویسم"]
   wordBuilder.innerHTML = "";
 wordBuilder.classList.add("hidden");
 
-  // IMAGE SELECTION
   // IMAGE SELECTION
 if (q.type === "image") {
   optionsBox.classList.add("image-grid");
@@ -352,7 +383,7 @@ shuffleArray(q.options).forEach(opt => {
 
   // AUDIO
   if (q.type === "audio") {
-    content.innerHTML = `<button class="audio-btn" onclick="speak('${q.speak}')">🔊 پخش</button>`;
+    content.innerHTML = "";
 
 shuffleArray(q.options).forEach(opt => {
       let b = document.createElement("button");
@@ -363,8 +394,7 @@ shuffleArray(q.options).forEach(opt => {
     });
   }
 
-  // BUILD ENGLISH
-    // BUILD ENGLISH / FA
+  // BUILD ENGLISH / FA
 
   else if (q.type === "build-en" || q.type === "build-fa") {
   content.innerHTML = `<p>${q.text}</p>`;
@@ -419,6 +449,26 @@ shuffleArray(q.words).forEach(w => {
   });
 }
 
+async function safeAddXP(amount) {
+  try {
+    if (typeof addXP === "function") {
+      await addXP(amount);
+    }
+  } catch (err) {
+    console.warn("ثبت XP رو سرور ناموفق بود (آفلاین یا خطای شبکه):", err);
+  }
+}
+
+async function safeLoseHeart() {
+  try {
+    if (typeof loseHeart === "function") {
+      await loseHeart();
+    }
+  } catch (err) {
+    console.warn("کم کردن قلب رو سرور ناموفق بود (آفلاین یا خطای شبکه):", err);
+  }
+}
+
 async function checkBuild(selected, correct) {
   const s = selected.map(w => w.trim().toLowerCase());
   const c = correct.map(w => w.trim().toLowerCase());
@@ -426,27 +476,16 @@ async function checkBuild(selected, correct) {
   if (JSON.stringify(s) === JSON.stringify(c)) {
     xp += 5;
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
+    await safeAddXP(5);
 
     current++;
     showQuestion();
   } else {
     alert("اشتباه بود! دوباره تلاش کن.");
 
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
+    await safeLoseHeart();
 
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
+    updateHeartDisplay();
 
     if (typeof getHearts === "function" && getHearts() <= 0) {
       document.getElementById("app").innerHTML = `
@@ -466,27 +505,16 @@ async function select(ans) {
   if (String(ans).trim().toLowerCase() === String(correct).trim().toLowerCase()) {
     xp += 5;
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
+    await safeAddXP(5);
 
     current++;
     showQuestion();
   } else {
     alert("اشتباه بود! دوباره تلاش کن.");
 
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
+    await safeLoseHeart();
 
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
+    updateHeartDisplay();
 
     if (typeof getHearts === "function" && getHearts() <= 0) {
       document.getElementById("app").innerHTML = `
@@ -555,6 +583,3 @@ function shuffleArray(arr) {
 
   return array;
 }
-
-
-showQuestion(); 

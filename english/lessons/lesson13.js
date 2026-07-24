@@ -2,6 +2,21 @@ let current = 0;
 let xp = 0;
 
 function speak(text){
+  // اگه داخل اپ موبایل (Capacitor) اجرا میشه، از موتور صدای خودِ اندروید استفاده کن
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    try {
+      window.Capacitor.Plugins.TextToSpeech.speak({
+        text: text,
+        lang: "en-US",
+        rate: 0.9,
+        category: "ambient"
+      });
+    } catch (err) {
+      console.warn("خطا در پخش صدا (native):", err);
+    }
+    return;
+  }
+
   if (!window.speechSynthesis) return;
 
   const utter = new SpeechSynthesisUtterance(text);
@@ -12,25 +27,33 @@ function speak(text){
   speechSynthesis.speak(utter);
 }
 
-window.onload = function() {
-  if (typeof checkAndRegenHearts === 'function') {
-  checkAndRegenHearts();
-}
-
-    if (typeof getHearts === 'function') {
-        const currentHearts = getHearts();
-        const heartElement = document.getElementById("heart-count");
-        if (heartElement) {
-            heartElement.textContent = currentHearts;
-        }
-        
-        // اگر قلب کاربر 0 بود، اجازه شروع درس را نده (اختیاری)
-        if (currentHearts <= 0) {
-            alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
-            window.location.href = "../home.html";
-        }
+window.onload = async function() {
+  // قبل از هر چیز، اطلاعات واقعی کاربر (قلب، XP) رو از سرور می‌گیریم
+  if (typeof initUserData === "function") {
+    try {
+      await initUserData();
+    } catch (err) {
+      console.warn("گرفتن اطلاعات کاربر ناموفق بود:", err);
     }
+  }
+
+  updateHeartDisplay();
+
+  if (typeof getHearts === "function" && getHearts() <= 0) {
+    alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
+    window.location.href = "../home.html";
+    return;
+  }
+
+  showQuestion();
 };
+
+function updateHeartDisplay() {
+  const heartElement = document.getElementById("heart-count");
+  if (heartElement && typeof getHearts === "function") {
+    heartElement.textContent = getHearts();
+  }
+}
 
 const questions = [
 
@@ -41,10 +64,10 @@ type:"image",
 question:"today کدام است؟",
 speak:"today",
 options:[
-{text:"tomorrow",image:"../../media/time/tomorrow.png"},
-{text:"today",image:"../../media/time/today.png"},
-{text:"yesterday",image:"../../media/time/yesterday.png"},
-{text:"morning",image:"../../media/time/morning.png"}
+{text:"tomorrow",image:"../../media/time/tomorrow.webp"},
+{text:"today",image:"../../media/time/today.webp"},
+{text:"yesterday",image:"../../media/time/yesterday.webp"},
+{text:"morning",image:"../../media/time/morning.webp"}
 ],
 answer:"today"
 },
@@ -54,10 +77,10 @@ type:"image",
 question:"tomorrow کدام است؟",
 speak:"tomorrow",
 options:[
-{text:"night",image:"../../media/time/night.png"},
-{text:"tomorrow",image:"../../media/time/tomorrow.png"},
-{text:"today",image:"../../media/time/today.png"},
-{text:"yesterday",image:"../../media/time/yesterday.png"}
+{text:"night",image:"../../media/time/night.webp"},
+{text:"tomorrow",image:"../../media/time/tomorrow.webp"},
+{text:"today",image:"../../media/time/today.webp"},
+{text:"yesterday",image:"../../media/time/yesterday.webp"}
 ],
 answer:"tomorrow"
 },
@@ -67,10 +90,10 @@ type:"image",
 question:"yesterday کدام است؟",
 speak:"yesterday",
 options:[
-{text:"today",image:"../../media/time/today.png"},
-{text:"yesterday",image:"../../media/time/yesterday.png"},
-{text:"night",image:"../../media/time/night.png"},
-{text:"tomorrow",image:"../../media/time/tomorrow.png"}
+{text:"today",image:"../../media/time/today.webp"},
+{text:"yesterday",image:"../../media/time/yesterday.webp"},
+{text:"night",image:"../../media/time/night.webp"},
+{text:"tomorrow",image:"../../media/time/tomorrow.webp"}
 ],
 answer:"yesterday"
 },
@@ -80,10 +103,10 @@ type:"image",
 question:"morning کدام است؟",
 speak:"morning",
 options:[
-{text:"yesterday",image:"../../media/time/yesterday.png"},
-{text:"tomorrow",image:"../../media/time/tomorrow.png"},
-{text:"morning",image:"../../media/time/morning.png"},
-{text:"today",image:"../../media/time/today.png"}
+{text:"yesterday",image:"../../media/time/yesterday.webp"},
+{text:"tomorrow",image:"../../media/time/tomorrow.webp"},
+{text:"morning",image:"../../media/time/morning.webp"},
+{text:"today",image:"../../media/time/today.webp"}
 ],
 answer:"morning"
 },
@@ -93,10 +116,10 @@ type:"image",
 question:"night کدام است؟",
 speak:"night",
 options:[
-{text:"morning",image:"../../media/time/morning.png"},
-{text:"today",image:"../../media/time/today.png"},
-{text:"tomorrow",image:"../../media/time/tomorrow.png"},
-{text:"night",image:"../../media/time/night.png"}
+{text:"morning",image:"../../media/time/morning.webp"},
+{text:"today",image:"../../media/time/today.webp"},
+{text:"tomorrow",image:"../../media/time/tomorrow.webp"},
+{text:"night",image:"../../media/time/night.webp"}
 ],
 answer:"night"
 },
@@ -106,7 +129,7 @@ answer:"night"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/time/today.png",
+image:"../../media/time/today.webp",
 options:["tomorrow","today","yesterday","morning"],
 answer:"today"
 },
@@ -114,7 +137,7 @@ answer:"today"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/time/tomorrow.png",
+image:"../../media/time/tomorrow.webp",
 options:["night","tomorrow","today","yesterday"],
 answer:"tomorrow"
 },
@@ -122,7 +145,7 @@ answer:"tomorrow"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/time/yesterday.png",
+image:"../../media/time/yesterday.webp",
 options:["today","yesterday","night","tomorrow"],
 answer:"yesterday"
 },
@@ -130,7 +153,7 @@ answer:"yesterday"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/time/morning.png",
+image:"../../media/time/morning.webp",
 options:["yesterday","tomorrow","morning","today"],
 answer:"morning"
 },
@@ -138,7 +161,7 @@ answer:"morning"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/time/night.png",
+image:"../../media/time/night.webp",
 options:["morning","today","tomorrow","night"],
 answer:"night"
 },
@@ -185,33 +208,33 @@ options:["morning","today","tomorrow","night"],
 answer:"night"
 },
 
-/* BUILD EN */
+/* BUILD EN - جدید ساده */
 
 {
 type:"build-en",
-speak:"Today is Monday",
+speak:"Today is hot",
 question:"جمله انگلیسی را بساز:",
-text:"امروز دوشنبه است",
-words:["is","Today","Monday"],
-answer:["Today","is","Monday"]
+text:"امروز گرم است",
+words:["is","Today","hot"],
+answer:["Today","is","hot"]
 },
 
 {
 type:"build-en",
-speak:"Tomorrow is Tuesday",
+speak:"Tomorrow is cold",
 question:"جمله انگلیسی را بساز:",
-text:"فردا سه‌شنبه است",
-words:["Tomorrow","is","Tuesday"],
-answer:["Tomorrow","is","Tuesday"]
+text:"فردا سرد است",
+words:["Tomorrow","is","cold"],
+answer:["Tomorrow","is","cold"]
 },
 
 {
 type:"build-en",
-speak:"Yesterday was Sunday",
+speak:"Yesterday was sunny",
 question:"جمله انگلیسی را بساز:",
-text:"دیروز یک‌شنبه بود",
-words:["was","Yesterday","Sunday"],
-answer:["Yesterday","was","Sunday"]
+text:"دیروز آفتابی بود",
+words:["Yesterday","was","sunny"],
+answer:["Yesterday","was","sunny"]
 },
 
 {
@@ -232,33 +255,33 @@ words:["night","Good"],
 answer:["Good","night"]
 },
 
-/* BUILD FA */
+/* BUILD FA - جدید ساده */
 
 {
 type:"build-fa",
-speak:"Today is Monday",
+speak:"Today is hot",
 question:"ترجمه را بساز:",
-text:"Today is Monday",
-words:["است","دوشنبه","امروز"],
-answer:["امروز","دوشنبه","است"]
+text:"Today is hot",
+words:["است","گرم","امروز"],
+answer:["امروز","گرم","است"]
 },
 
 {
 type:"build-fa",
-speak:"Tomorrow is Tuesday",
+speak:"Tomorrow is cold",
 question:"ترجمه را بساز:",
-text:"Tomorrow is Tuesday",
-words:["است","سه‌شنبه","فردا"],
-answer:["فردا","سه‌شنبه","است"]
+text:"Tomorrow is cold",
+words:["است","سرد","فردا"],
+answer:["فردا","سرد","است"]
 },
 
 {
 type:"build-fa",
-speak:"Yesterday was Sunday",
+speak:"Yesterday was sunny",
 question:"ترجمه را بساز:",
-text:"Yesterday was Sunday",
-words:["بود","یک‌شنبه","دیروز"],
-answer:["دیروز","یک‌شنبه","بود"]
+text:"Yesterday was sunny",
+words:["بود","آفتابی","دیروز"],
+answer:["دیروز","آفتابی","بود"]
 },
 
 {
@@ -281,13 +304,12 @@ answer:["شب","بخیر"]
 
 ];
 
+
 // =====================================
 // نمایش سوال
 // =====================================
-    // اضافه کردن XP کسب شده به دیتابیس پروفایل در پایان درس
 
-
-    function showQuestion() {
+function showQuestion() {
   if (current >= questions.length) {
     const finalXP = typeof getTotalXP === "function" ? getTotalXP() : xp;
 
@@ -311,6 +333,17 @@ answer:["شب","بخیر"]
   const content = document.getElementById("question-content");
   const optionsBox = document.getElementById("options");
   const wordBuilder = document.getElementById("word-builder");
+  const repeatBtn = document.getElementById("repeat-audio-btn");
+
+  if (repeatBtn) {
+    if (q.speak) {
+      repeatBtn.style.display = "inline-block";
+      repeatBtn.onclick = () => speak(q.speak);
+    } else {
+      repeatBtn.style.display = "none";
+      repeatBtn.onclick = null;
+    }
+  }
 
   title.innerText = q.question;
   content.innerHTML = "";
@@ -318,7 +351,6 @@ answer:["شب","بخیر"]
   wordBuilder.innerHTML = "";
 wordBuilder.classList.add("hidden");
 
-  // IMAGE SELECTION
   // IMAGE SELECTION
 if (q.type === "image") {
   optionsBox.classList.add("image-grid");
@@ -351,7 +383,7 @@ shuffleArray(q.options).forEach(opt => {
 
   // AUDIO
   if (q.type === "audio") {
-    content.innerHTML = `<button class="audio-btn" onclick="speak('${q.speak}')">🔊 پخش</button>`;
+    content.innerHTML = "";
 
 shuffleArray(q.options).forEach(opt => {
       let b = document.createElement("button");
@@ -362,8 +394,7 @@ shuffleArray(q.options).forEach(opt => {
     });
   }
 
-  // BUILD ENGLISH
-    // BUILD ENGLISH / FA
+  // BUILD ENGLISH / FA
 
   else if (q.type === "build-en" || q.type === "build-fa") {
   content.innerHTML = `<p>${q.text}</p>`;
@@ -418,6 +449,26 @@ shuffleArray(q.words).forEach(w => {
   });
 }
 
+async function safeAddXP(amount) {
+  try {
+    if (typeof addXP === "function") {
+      await addXP(amount);
+    }
+  } catch (err) {
+    console.warn("ثبت XP رو سرور ناموفق بود (آفلاین یا خطای شبکه):", err);
+  }
+}
+
+async function safeLoseHeart() {
+  try {
+    if (typeof loseHeart === "function") {
+      await loseHeart();
+    }
+  } catch (err) {
+    console.warn("کم کردن قلب رو سرور ناموفق بود (آفلاین یا خطای شبکه):", err);
+  }
+}
+
 async function checkBuild(selected, correct) {
   const s = selected.map(w => w.trim().toLowerCase());
   const c = correct.map(w => w.trim().toLowerCase());
@@ -425,27 +476,16 @@ async function checkBuild(selected, correct) {
   if (JSON.stringify(s) === JSON.stringify(c)) {
     xp += 5;
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
+    await safeAddXP(5);
 
     current++;
     showQuestion();
   } else {
     alert("اشتباه بود! دوباره تلاش کن.");
 
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
+    await safeLoseHeart();
 
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
+    updateHeartDisplay();
 
     if (typeof getHearts === "function" && getHearts() <= 0) {
       document.getElementById("app").innerHTML = `
@@ -465,27 +505,16 @@ async function select(ans) {
   if (String(ans).trim().toLowerCase() === String(correct).trim().toLowerCase()) {
     xp += 5;
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
+    await safeAddXP(5);
 
     current++;
     showQuestion();
   } else {
     alert("اشتباه بود! دوباره تلاش کن.");
 
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
+    await safeLoseHeart();
 
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
+    updateHeartDisplay();
 
     if (typeof getHearts === "function" && getHearts() <= 0) {
       document.getElementById("app").innerHTML = `
@@ -554,6 +583,3 @@ function shuffleArray(arr) {
 
   return array;
 }
-
-
-showQuestion(); 

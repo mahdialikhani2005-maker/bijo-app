@@ -2,6 +2,21 @@ let current = 0;
 let xp = 0;
 
 function speak(text){
+  // اگه داخل اپ موبایل (Capacitor) اجرا میشه، از موتور صدای خودِ اندروید استفاده کن
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    try {
+      window.Capacitor.Plugins.TextToSpeech.speak({
+        text: text,
+        lang: "en-US",
+        rate: 0.9,
+        category: "ambient"
+      });
+    } catch (err) {
+      console.warn("خطا در پخش صدا (native):", err);
+    }
+    return;
+  }
+
   if (!window.speechSynthesis) return;
 
   const utter = new SpeechSynthesisUtterance(text);
@@ -12,25 +27,33 @@ function speak(text){
   speechSynthesis.speak(utter);
 }
 
-window.onload = function() {
-  if (typeof checkAndRegenHearts === 'function') {
-  checkAndRegenHearts();
-}
-
-    if (typeof getHearts === 'function') {
-        const currentHearts = getHearts();
-        const heartElement = document.getElementById("heart-count");
-        if (heartElement) {
-            heartElement.textContent = currentHearts;
-        }
-        
-        // اگر قلب کاربر 0 بود، اجازه شروع درس را نده (اختیاری)
-        if (currentHearts <= 0) {
-            alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
-            window.location.href = "../home.html";
-        }
+window.onload = async function() {
+  // قبل از هر چیز، اطلاعات واقعی کاربر (قلب، XP) رو از سرور می‌گیریم
+  if (typeof initUserData === "function") {
+    try {
+      await initUserData();
+    } catch (err) {
+      console.warn("گرفتن اطلاعات کاربر ناموفق بود:", err);
     }
+  }
+
+  updateHeartDisplay();
+
+  if (typeof getHearts === "function" && getHearts() <= 0) {
+    alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
+    window.location.href = "../home.html";
+    return;
+  }
+
+  showQuestion();
 };
+
+function updateHeartDisplay() {
+  const heartElement = document.getElementById("heart-count");
+  if (heartElement && typeof getHearts === "function") {
+    heartElement.textContent = getHearts();
+  }
+}
 
 const questions = [
 
@@ -41,10 +64,10 @@ type:"image",
 question:"who کدام است؟",
 speak:"who",
 options:[
-{text:"what",image:"../../media/questions/what.png"},
-{text:"who",image:"../../media/questions/who.png"},
-{text:"where",image:"../../media/questions/where.png"},
-{text:"when",image:"../../media/questions/when.png"}
+{text:"what",image:"../../media/questions/what.webp"},
+{text:"who",image:"../../media/questions/who.webp"},
+{text:"where",image:"../../media/questions/where.webp"},
+{text:"when",image:"../../media/questions/when.webp"}
 ],
 answer:"who"
 },
@@ -54,10 +77,10 @@ type:"image",
 question:"what کدام است؟",
 speak:"what",
 options:[
-{text:"why",image:"../../media/questions/why.png"},
-{text:"what",image:"../../media/questions/what.png"},
-{text:"who",image:"../../media/questions/who.png"},
-{text:"where",image:"../../media/questions/where.png"}
+{text:"why",image:"../../media/questions/why.webp"},
+{text:"what",image:"../../media/questions/what.webp"},
+{text:"who",image:"../../media/questions/who.webp"},
+{text:"where",image:"../../media/questions/where.webp"}
 ],
 answer:"what"
 },
@@ -67,10 +90,10 @@ type:"image",
 question:"where کدام است؟",
 speak:"where",
 options:[
-{text:"what",image:"../../media/questions/what.png"},
-{text:"where",image:"../../media/questions/where.png"},
-{text:"why",image:"../../media/questions/why.png"},
-{text:"who",image:"../../media/questions/who.png"}
+{text:"what",image:"../../media/questions/what.webp"},
+{text:"where",image:"../../media/questions/where.webp"},
+{text:"why",image:"../../media/questions/why.webp"},
+{text:"who",image:"../../media/questions/who.webp"}
 ],
 answer:"where"
 },
@@ -80,10 +103,10 @@ type:"image",
 question:"when کدام است؟",
 speak:"when",
 options:[
-{text:"where",image:"../../media/questions/where.png"},
-{text:"who",image:"../../media/questions/who.png"},
-{text:"when",image:"../../media/questions/when.png"},
-{text:"what",image:"../../media/questions/what.png"}
+{text:"where",image:"../../media/questions/where.webp"},
+{text:"who",image:"../../media/questions/who.webp"},
+{text:"when",image:"../../media/questions/when.webp"},
+{text:"what",image:"../../media/questions/what.webp"}
 ],
 answer:"when"
 },
@@ -93,10 +116,10 @@ type:"image",
 question:"why کدام است؟",
 speak:"why",
 options:[
-{text:"when",image:"../../media/questions/when.png"},
-{text:"what",image:"../../media/questions/what.png"},
-{text:"who",image:"../../media/questions/who.png"},
-{text:"why",image:"../../media/questions/why.png"}
+{text:"when",image:"../../media/questions/when.webp"},
+{text:"what",image:"../../media/questions/what.webp"},
+{text:"who",image:"../../media/questions/who.webp"},
+{text:"why",image:"../../media/questions/why.webp"}
 ],
 answer:"why"
 },
@@ -106,7 +129,7 @@ answer:"why"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/questions/who.png",
+image:"../../media/questions/who.webp",
 options:["what","who","where","when"],
 answer:"who"
 },
@@ -114,7 +137,7 @@ answer:"who"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/questions/what.png",
+image:"../../media/questions/what.webp",
 options:["why","what","who","where"],
 answer:"what"
 },
@@ -122,7 +145,7 @@ answer:"what"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/questions/where.png",
+image:"../../media/questions/where.webp",
 options:["what","where","why","who"],
 answer:"where"
 },
@@ -130,7 +153,7 @@ answer:"where"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/questions/when.png",
+image:"../../media/questions/when.webp",
 options:["where","who","when","what"],
 answer:"when"
 },
@@ -138,7 +161,7 @@ answer:"when"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/questions/why.png",
+image:"../../media/questions/why.webp",
 options:["when","what","who","why"],
 answer:"why"
 },
@@ -185,7 +208,7 @@ options:["when","what","who","why"],
 answer:"why"
 },
 
-/* BUILD EN */
+/* BUILD EN - جدید */
 
 {
 type:"build-en",
@@ -232,7 +255,7 @@ words:["Why","you","happy","are"],
 answer:["Why","are","you","happy"]
 },
 
-/* BUILD FA */
+/* BUILD FA - جدید */
 
 {
 type:"build-fa",
@@ -281,13 +304,12 @@ answer:["تو","چرا","خوشحال","هستی"]
 
 ];
 
+
 // =====================================
 // نمایش سوال
 // =====================================
-    // اضافه کردن XP کسب شده به دیتابیس پروفایل در پایان درس
 
-
-    function showQuestion() {
+function showQuestion() {
   if (current >= questions.length) {
     const finalXP = typeof getTotalXP === "function" ? getTotalXP() : xp;
 
@@ -311,6 +333,17 @@ answer:["تو","چرا","خوشحال","هستی"]
   const content = document.getElementById("question-content");
   const optionsBox = document.getElementById("options");
   const wordBuilder = document.getElementById("word-builder");
+  const repeatBtn = document.getElementById("repeat-audio-btn");
+
+  if (repeatBtn) {
+    if (q.speak) {
+      repeatBtn.style.display = "inline-block";
+      repeatBtn.onclick = () => speak(q.speak);
+    } else {
+      repeatBtn.style.display = "none";
+      repeatBtn.onclick = null;
+    }
+  }
 
   title.innerText = q.question;
   content.innerHTML = "";
@@ -318,7 +351,6 @@ answer:["تو","چرا","خوشحال","هستی"]
   wordBuilder.innerHTML = "";
 wordBuilder.classList.add("hidden");
 
-  // IMAGE SELECTION
   // IMAGE SELECTION
 if (q.type === "image") {
   optionsBox.classList.add("image-grid");
@@ -351,7 +383,7 @@ shuffleArray(q.options).forEach(opt => {
 
   // AUDIO
   if (q.type === "audio") {
-    content.innerHTML = `<button class="audio-btn" onclick="speak('${q.speak}')">🔊 پخش</button>`;
+    content.innerHTML = "";
 
 shuffleArray(q.options).forEach(opt => {
       let b = document.createElement("button");
@@ -362,8 +394,7 @@ shuffleArray(q.options).forEach(opt => {
     });
   }
 
-  // BUILD ENGLISH
-    // BUILD ENGLISH / FA
+  // BUILD ENGLISH / FA
 
   else if (q.type === "build-en" || q.type === "build-fa") {
   content.innerHTML = `<p>${q.text}</p>`;
@@ -418,6 +449,26 @@ shuffleArray(q.words).forEach(w => {
   });
 }
 
+async function safeAddXP(amount) {
+  try {
+    if (typeof addXP === "function") {
+      await addXP(amount);
+    }
+  } catch (err) {
+    console.warn("ثبت XP رو سرور ناموفق بود (آفلاین یا خطای شبکه):", err);
+  }
+}
+
+async function safeLoseHeart() {
+  try {
+    if (typeof loseHeart === "function") {
+      await loseHeart();
+    }
+  } catch (err) {
+    console.warn("کم کردن قلب رو سرور ناموفق بود (آفلاین یا خطای شبکه):", err);
+  }
+}
+
 async function checkBuild(selected, correct) {
   const s = selected.map(w => w.trim().toLowerCase());
   const c = correct.map(w => w.trim().toLowerCase());
@@ -425,27 +476,16 @@ async function checkBuild(selected, correct) {
   if (JSON.stringify(s) === JSON.stringify(c)) {
     xp += 5;
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
+    await safeAddXP(5);
 
     current++;
     showQuestion();
   } else {
     alert("اشتباه بود! دوباره تلاش کن.");
 
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
+    await safeLoseHeart();
 
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
+    updateHeartDisplay();
 
     if (typeof getHearts === "function" && getHearts() <= 0) {
       document.getElementById("app").innerHTML = `
@@ -465,27 +505,16 @@ async function select(ans) {
   if (String(ans).trim().toLowerCase() === String(correct).trim().toLowerCase()) {
     xp += 5;
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
+    await safeAddXP(5);
 
     current++;
     showQuestion();
   } else {
     alert("اشتباه بود! دوباره تلاش کن.");
 
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
+    await safeLoseHeart();
 
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
+    updateHeartDisplay();
 
     if (typeof getHearts === "function" && getHearts() <= 0) {
       document.getElementById("app").innerHTML = `
@@ -554,6 +583,3 @@ function shuffleArray(arr) {
 
   return array;
 }
-
-
-showQuestion(); 

@@ -2,6 +2,21 @@ let current = 0;
 let xp = 0;
 
 function speak(text){
+  // اگه داخل اپ موبایل (Capacitor) اجرا میشه، از موتور صدای خودِ اندروید استفاده کن
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    try {
+      window.Capacitor.Plugins.TextToSpeech.speak({
+        text: text,
+        lang: "en-US",
+        rate: 0.9,
+        category: "ambient"
+      });
+    } catch (err) {
+      console.warn("خطا در پخش صدا (native):", err);
+    }
+    return;
+  }
+
   if (!window.speechSynthesis) return;
 
   const utter = new SpeechSynthesisUtterance(text);
@@ -12,25 +27,33 @@ function speak(text){
   speechSynthesis.speak(utter);
 }
 
-window.onload = function() {
-  if (typeof checkAndRegenHearts === 'function') {
-  checkAndRegenHearts();
-}
-
-    if (typeof getHearts === 'function') {
-        const currentHearts = getHearts();
-        const heartElement = document.getElementById("heart-count");
-        if (heartElement) {
-            heartElement.textContent = currentHearts;
-        }
-        
-        // اگر قلب کاربر 0 بود، اجازه شروع درس را نده (اختیاری)
-        if (currentHearts <= 0) {
-            alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
-            window.location.href = "../home.html";
-        }
+window.onload = async function() {
+  // قبل از هر چیز، اطلاعات واقعی کاربر (قلب، XP) رو از سرور می‌گیریم
+  if (typeof initUserData === "function") {
+    try {
+      await initUserData();
+    } catch (err) {
+      console.warn("گرفتن اطلاعات کاربر ناموفق بود:", err);
     }
+  }
+
+  updateHeartDisplay();
+
+  if (typeof getHearts === "function" && getHearts() <= 0) {
+    alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
+    window.location.href = "../home.html";
+    return;
+  }
+
+  showQuestion();
 };
+
+function updateHeartDisplay() {
+  const heartElement = document.getElementById("heart-count");
+  if (heartElement && typeof getHearts === "function") {
+    heartElement.textContent = getHearts();
+  }
+}
 
 const questions = [
 
@@ -41,10 +64,10 @@ type:"image",
 question:"teacher کدام است؟",
 speak:"teacher",
 options:[
-{text:"doctor",image:"../../media/jobs/doctor.png"},
-{text:"teacher",image:"../../media/jobs/teacher.png"},
-{text:"engineer",image:"../../media/jobs/engineer.png"},
-{text:"student",image:"../../media/jobs/student.png"}
+{text:"doctor",image:"../../media/jobs/doctor.webp"},
+{text:"teacher",image:"../../media/jobs/teacher.webp"},
+{text:"engineer",image:"../../media/jobs/engineer.webp"},
+{text:"student",image:"../../media/jobs/student.webp"}
 ],
 answer:"teacher"
 },
@@ -54,10 +77,10 @@ type:"image",
 question:"doctor کدام است؟",
 speak:"doctor",
 options:[
-{text:"student",image:"../../media/jobs/student.png"},
-{text:"doctor",image:"../../media/jobs/doctor.png"},
-{text:"driver",image:"../../media/jobs/driver.png"},
-{text:"teacher",image:"../../media/jobs/teacher.png"}
+{text:"student",image:"../../media/jobs/student.webp"},
+{text:"doctor",image:"../../media/jobs/doctor.webp"},
+{text:"driver",image:"../../media/jobs/driver.webp"},
+{text:"teacher",image:"../../media/jobs/teacher.webp"}
 ],
 answer:"doctor"
 },
@@ -67,10 +90,10 @@ type:"image",
 question:"engineer کدام است؟",
 speak:"engineer",
 options:[
-{text:"teacher",image:"../../media/jobs/teacher.png"},
-{text:"engineer",image:"../../media/jobs/engineer.png"},
-{text:"driver",image:"../../media/jobs/driver.png"},
-{text:"doctor",image:"../../media/jobs/doctor.png"}
+{text:"teacher",image:"../../media/jobs/teacher.webp"},
+{text:"engineer",image:"../../media/jobs/engineer.webp"},
+{text:"driver",image:"../../media/jobs/driver.webp"},
+{text:"doctor",image:"../../media/jobs/doctor.webp"}
 ],
 answer:"engineer"
 },
@@ -80,10 +103,10 @@ type:"image",
 question:"student کدام است؟",
 speak:"student",
 options:[
-{text:"engineer",image:"../../media/jobs/engineer.png"},
-{text:"doctor",image:"../../media/jobs/doctor.png"},
-{text:"student",image:"../../media/jobs/student.png"},
-{text:"teacher",image:"../../media/jobs/teacher.png"}
+{text:"engineer",image:"../../media/jobs/engineer.webp"},
+{text:"doctor",image:"../../media/jobs/doctor.webp"},
+{text:"student",image:"../../media/jobs/student.webp"},
+{text:"teacher",image:"../../media/jobs/teacher.webp"}
 ],
 answer:"student"
 },
@@ -93,10 +116,10 @@ type:"image",
 question:"driver کدام است؟",
 speak:"driver",
 options:[
-{text:"student",image:"../../media/jobs/student.png"},
-{text:"teacher",image:"../../media/jobs/teacher.png"},
-{text:"doctor",image:"../../media/jobs/doctor.png"},
-{text:"driver",image:"../../media/jobs/driver.png"}
+{text:"student",image:"../../media/jobs/student.webp"},
+{text:"teacher",image:"../../media/jobs/teacher.webp"},
+{text:"doctor",image:"../../media/jobs/doctor.webp"},
+{text:"driver",image:"../../media/jobs/driver.webp"}
 ],
 answer:"driver"
 },
@@ -106,7 +129,7 @@ answer:"driver"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/jobs/teacher.png",
+image:"../../media/jobs/teacher.webp",
 options:["doctor","teacher","engineer","student"],
 answer:"teacher"
 },
@@ -114,7 +137,7 @@ answer:"teacher"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/jobs/doctor.png",
+image:"../../media/jobs/doctor.webp",
 options:["student","doctor","driver","teacher"],
 answer:"doctor"
 },
@@ -122,7 +145,7 @@ answer:"doctor"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/jobs/engineer.png",
+image:"../../media/jobs/engineer.webp",
 options:["teacher","engineer","driver","doctor"],
 answer:"engineer"
 },
@@ -130,7 +153,7 @@ answer:"engineer"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/jobs/student.png",
+image:"../../media/jobs/student.webp",
 options:["engineer","doctor","student","teacher"],
 answer:"student"
 },
@@ -138,7 +161,7 @@ answer:"student"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/jobs/driver.png",
+image:"../../media/jobs/driver.webp",
 options:["student","teacher","doctor","driver"],
 answer:"driver"
 },
@@ -185,7 +208,7 @@ options:["student","teacher","doctor","driver"],
 answer:"driver"
 },
 
-/* BUILD EN */
+/* BUILD EN - جدید */
 
 {
 type:"build-en",
@@ -232,7 +255,7 @@ words:["driver","a","is","He"],
 answer:["He","is","a","driver"]
 },
 
-/* BUILD FA */
+/* BUILD FA - جدید */
 
 {
 type:"build-fa",
@@ -280,13 +303,13 @@ answer:["او","یک","راننده","است"]
 }
 
 ];
+
+
 // =====================================
 // نمایش سوال
 // =====================================
-    // اضافه کردن XP کسب شده به دیتابیس پروفایل در پایان درس
 
-
-    function showQuestion() {
+function showQuestion() {
   if (current >= questions.length) {
     const finalXP = typeof getTotalXP === "function" ? getTotalXP() : xp;
 
@@ -310,6 +333,17 @@ answer:["او","یک","راننده","است"]
   const content = document.getElementById("question-content");
   const optionsBox = document.getElementById("options");
   const wordBuilder = document.getElementById("word-builder");
+  const repeatBtn = document.getElementById("repeat-audio-btn");
+
+  if (repeatBtn) {
+    if (q.speak) {
+      repeatBtn.style.display = "inline-block";
+      repeatBtn.onclick = () => speak(q.speak);
+    } else {
+      repeatBtn.style.display = "none";
+      repeatBtn.onclick = null;
+    }
+  }
 
   title.innerText = q.question;
   content.innerHTML = "";
@@ -317,7 +351,6 @@ answer:["او","یک","راننده","است"]
   wordBuilder.innerHTML = "";
 wordBuilder.classList.add("hidden");
 
-  // IMAGE SELECTION
   // IMAGE SELECTION
 if (q.type === "image") {
   optionsBox.classList.add("image-grid");
@@ -350,7 +383,7 @@ shuffleArray(q.options).forEach(opt => {
 
   // AUDIO
   if (q.type === "audio") {
-    content.innerHTML = `<button class="audio-btn" onclick="speak('${q.speak}')">🔊 پخش</button>`;
+    content.innerHTML = "";
 
 shuffleArray(q.options).forEach(opt => {
       let b = document.createElement("button");
@@ -361,8 +394,7 @@ shuffleArray(q.options).forEach(opt => {
     });
   }
 
-  // BUILD ENGLISH
-    // BUILD ENGLISH / FA
+  // BUILD ENGLISH / FA
 
   else if (q.type === "build-en" || q.type === "build-fa") {
   content.innerHTML = `<p>${q.text}</p>`;
@@ -417,6 +449,26 @@ shuffleArray(q.words).forEach(w => {
   });
 }
 
+async function safeAddXP(amount) {
+  try {
+    if (typeof addXP === "function") {
+      await addXP(amount);
+    }
+  } catch (err) {
+    console.warn("ثبت XP رو سرور ناموفق بود (آفلاین یا خطای شبکه):", err);
+  }
+}
+
+async function safeLoseHeart() {
+  try {
+    if (typeof loseHeart === "function") {
+      await loseHeart();
+    }
+  } catch (err) {
+    console.warn("کم کردن قلب رو سرور ناموفق بود (آفلاین یا خطای شبکه):", err);
+  }
+}
+
 async function checkBuild(selected, correct) {
   const s = selected.map(w => w.trim().toLowerCase());
   const c = correct.map(w => w.trim().toLowerCase());
@@ -424,27 +476,16 @@ async function checkBuild(selected, correct) {
   if (JSON.stringify(s) === JSON.stringify(c)) {
     xp += 5;
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
+    await safeAddXP(5);
 
     current++;
     showQuestion();
   } else {
     alert("اشتباه بود! دوباره تلاش کن.");
 
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
+    await safeLoseHeart();
 
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
+    updateHeartDisplay();
 
     if (typeof getHearts === "function" && getHearts() <= 0) {
       document.getElementById("app").innerHTML = `
@@ -464,27 +505,16 @@ async function select(ans) {
   if (String(ans).trim().toLowerCase() === String(correct).trim().toLowerCase()) {
     xp += 5;
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
+    await safeAddXP(5);
 
     current++;
     showQuestion();
   } else {
     alert("اشتباه بود! دوباره تلاش کن.");
 
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
+    await safeLoseHeart();
 
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
+    updateHeartDisplay();
 
     if (typeof getHearts === "function" && getHearts() <= 0) {
       document.getElementById("app").innerHTML = `
@@ -553,6 +583,3 @@ function shuffleArray(arr) {
 
   return array;
 }
-
-
-showQuestion(); 

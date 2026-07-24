@@ -2,6 +2,21 @@ let current = 0;
 let xp = 0;
 
 function speak(text){
+  // اگه داخل اپ موبایل (Capacitor) اجرا میشه، از موتور صدای خودِ اندروید استفاده کن
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    try {
+      window.Capacitor.Plugins.TextToSpeech.speak({
+        text: text,
+        lang: "en-US",
+        rate: 0.9,
+        category: "ambient"
+      });
+    } catch (err) {
+      console.warn("خطا در پخش صدا (native):", err);
+    }
+    return;
+  }
+
   if (!window.speechSynthesis) return;
 
   const utter = new SpeechSynthesisUtterance(text);
@@ -12,25 +27,33 @@ function speak(text){
   speechSynthesis.speak(utter);
 }
 
-window.onload = function() {
-  if (typeof checkAndRegenHearts === 'function') {
-  checkAndRegenHearts();
-}
-
-    if (typeof getHearts === 'function') {
-        const currentHearts = getHearts();
-        const heartElement = document.getElementById("heart-count");
-        if (heartElement) {
-            heartElement.textContent = currentHearts;
-        }
-        
-        // اگر قلب کاربر 0 بود، اجازه شروع درس را نده (اختیاری)
-        if (currentHearts <= 0) {
-            alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
-            window.location.href = "../home.html";
-        }
+window.onload = async function() {
+  // قبل از هر چیز، اطلاعات واقعی کاربر (قلب، XP) رو از سرور می‌گیریم
+  if (typeof initUserData === "function") {
+    try {
+      await initUserData();
+    } catch (err) {
+      console.warn("گرفتن اطلاعات کاربر ناموفق بود:", err);
     }
+  }
+
+  updateHeartDisplay();
+
+  if (typeof getHearts === "function" && getHearts() <= 0) {
+    alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
+    window.location.href = "../home.html";
+    return;
+  }
+
+  showQuestion();
 };
+
+function updateHeartDisplay() {
+  const heartElement = document.getElementById("heart-count");
+  if (heartElement && typeof getHearts === "function") {
+    heartElement.textContent = getHearts();
+  }
+}
 
 const questions = [
 
@@ -41,10 +64,10 @@ type:"image",
 question:"car کدام است؟",
 speak:"car",
 options:[
-{text:"bus",image:"../../media/vehicles/bus.png"},
-{text:"car",image:"../../media/vehicles/car.png"},
-{text:"train",image:"../../media/vehicles/train.png"},
-{text:"airplane",image:"../../media/vehicles/airplane.png"}
+{text:"bus",image:"../../media/vehicles/bus.webp"},
+{text:"car",image:"../../media/vehicles/car.webp"},
+{text:"train",image:"../../media/vehicles/train.webp"},
+{text:"airplane",image:"../../media/vehicles/airplane.webp"}
 ],
 answer:"car"
 },
@@ -54,10 +77,10 @@ type:"image",
 question:"bus کدام است؟",
 speak:"bus",
 options:[
-{text:"airplane",image:"../../media/vehicles/airplane.png"},
-{text:"bus",image:"../../media/vehicles/bus.png"},
-{text:"bicycle",image:"../../media/vehicles/bicycle.png"},
-{text:"car",image:"../../media/vehicles/car.png"}
+{text:"airplane",image:"../../media/vehicles/airplane.webp"},
+{text:"bus",image:"../../media/vehicles/bus.webp"},
+{text:"bicycle",image:"../../media/vehicles/bicycle.webp"},
+{text:"car",image:"../../media/vehicles/car.webp"}
 ],
 answer:"bus"
 },
@@ -67,10 +90,10 @@ type:"image",
 question:"train کدام است؟",
 speak:"train",
 options:[
-{text:"car",image:"../../media/vehicles/car.png"},
-{text:"train",image:"../../media/vehicles/train.png"},
-{text:"bicycle",image:"../../media/vehicles/bicycle.png"},
-{text:"bus",image:"../../media/vehicles/bus.png"}
+{text:"car",image:"../../media/vehicles/car.webp"},
+{text:"train",image:"../../media/vehicles/train.webp"},
+{text:"bicycle",image:"../../media/vehicles/bicycle.webp"},
+{text:"bus",image:"../../media/vehicles/bus.webp"}
 ],
 answer:"train"
 },
@@ -80,10 +103,10 @@ type:"image",
 question:"airplane کدام است؟",
 speak:"airplane",
 options:[
-{text:"train",image:"../../media/vehicles/train.png"},
-{text:"bus",image:"../../media/vehicles/bus.png"},
-{text:"airplane",image:"../../media/vehicles/airplane.png"},
-{text:"car",image:"../../media/vehicles/car.png"}
+{text:"train",image:"../../media/vehicles/train.webp"},
+{text:"bus",image:"../../media/vehicles/bus.webp"},
+{text:"airplane",image:"../../media/vehicles/airplane.webp"},
+{text:"car",image:"../../media/vehicles/car.webp"}
 ],
 answer:"airplane"
 },
@@ -93,10 +116,10 @@ type:"image",
 question:"bicycle کدام است؟",
 speak:"bicycle",
 options:[
-{text:"airplane",image:"../../media/vehicles/airplane.png"},
-{text:"car",image:"../../media/vehicles/car.png"},
-{text:"bus",image:"../../media/vehicles/bus.png"},
-{text:"bicycle",image:"../../media/vehicles/bicycle.png"}
+{text:"airplane",image:"../../media/vehicles/airplane.webp"},
+{text:"car",image:"../../media/vehicles/car.webp"},
+{text:"bus",image:"../../media/vehicles/bus.webp"},
+{text:"bicycle",image:"../../media/vehicles/bicycle.webp"}
 ],
 answer:"bicycle"
 },
@@ -106,7 +129,7 @@ answer:"bicycle"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/vehicles/car.png",
+image:"../../media/vehicles/car.webp",
 options:["bus","car","train","airplane"],
 answer:"car"
 },
@@ -114,7 +137,7 @@ answer:"car"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/vehicles/bus.png",
+image:"../../media/vehicles/bus.webp",
 options:["airplane","bus","bicycle","car"],
 answer:"bus"
 },
@@ -122,7 +145,7 @@ answer:"bus"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/vehicles/train.png",
+image:"../../media/vehicles/train.webp",
 options:["car","train","bicycle","bus"],
 answer:"train"
 },
@@ -130,7 +153,7 @@ answer:"train"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/vehicles/airplane.png",
+image:"../../media/vehicles/airplane.webp",
 options:["train","bus","airplane","car"],
 answer:"airplane"
 },
@@ -138,7 +161,7 @@ answer:"airplane"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/vehicles/bicycle.png",
+image:"../../media/vehicles/bicycle.webp",
 options:["airplane","car","bus","bicycle"],
 answer:"bicycle"
 },
@@ -185,7 +208,7 @@ options:["airplane","car","bus","bicycle"],
 answer:"bicycle"
 },
 
-/* BUILD EN */
+/* BUILD EN - جدید با تنوع */
 
 {
 type:"build-en",
@@ -198,41 +221,41 @@ answer:["I","have","a","car"]
 
 {
 type:"build-en",
-speak:"I have a bus",
+speak:"She has a bus",
 question:"جمله انگلیسی را بساز:",
-text:"من یک اتوبوس دارم",
-words:["bus","have","a","I"],
-answer:["I","have","a","bus"]
+text:"او یک اتوبوس دارد",
+words:["has","bus","a","She"],
+answer:["She","has","a","bus"]
 },
 
 {
 type:"build-en",
-speak:"I have a train",
+speak:"I see a train",
 question:"جمله انگلیسی را بساز:",
-text:"من یک قطار دارم",
-words:["train","have","a","I"],
-answer:["I","have","a","train"]
+text:"من یک قطار می‌بینم",
+words:["see","train","a","I"],
+answer:["I","see","a","train"]
 },
 
 {
 type:"build-en",
-speak:"I have an airplane",
+speak:"He has an airplane",
 question:"جمله انگلیسی را بساز:",
-text:"من یک هواپیما دارم",
-words:["airplane","have","an","I"],
-answer:["I","have","an","airplane"]
+text:"او یک هواپیما دارد",
+words:["has","airplane","an","He"],
+answer:["He","has","an","airplane"]
 },
 
 {
 type:"build-en",
-speak:"I have a bicycle",
+speak:"I like the bicycle",
 question:"جمله انگلیسی را بساز:",
-text:"من یک دوچرخه دارم",
-words:["bicycle","have","a","I"],
-answer:["I","have","a","bicycle"]
+text:"من دوچرخه را دوست دارم",
+words:["like","the","bicycle","I"],
+answer:["I","like","the","bicycle"]
 },
 
-/* BUILD FA */
+/* BUILD FA - جدید با تنوع */
 
 {
 type:"build-fa",
@@ -245,49 +268,48 @@ answer:["من","یک","ماشین","دارم"]
 
 {
 type:"build-fa",
-speak:"I have a bus",
+speak:"She has a bus",
 question:"ترجمه را بساز:",
-text:"I have a bus",
-words:["دارم","اتوبوس","یک","من"],
-answer:["من","یک","اتوبوس","دارم"]
+text:"She has a bus",
+words:["دارد","اتوبوس","یک","او"],
+answer:["او","یک","اتوبوس","دارد"]
 },
 
 {
 type:"build-fa",
-speak:"I have a train",
+speak:"I see a train",
 question:"ترجمه را بساز:",
-text:"I have a train",
-words:["دارم","قطار","یک","من"],
-answer:["من","یک","قطار","دارم"]
+text:"I see a train",
+words:["می‌بینم","قطار","یک","من"],
+answer:["من","یک","قطار","می‌بینم"]
 },
 
 {
 type:"build-fa",
-speak:"I have an airplane",
+speak:"He has an airplane",
 question:"ترجمه را بساز:",
-text:"I have an airplane",
-words:["دارم","هواپیما","یک","من"],
-answer:["من","یک","هواپیما","دارم"]
+text:"He has an airplane",
+words:["دارد","هواپیما","یک","او"],
+answer:["او","یک","هواپیما","دارد"]
 },
 
 {
 type:"build-fa",
-speak:"I have a bicycle",
+speak:"I like the bicycle",
 question:"ترجمه را بساز:",
-text:"I have a bicycle",
-words:["دارم","دوچرخه","یک","من"],
-answer:["من","یک","دوچرخه","دارم"]
+text:"I like the bicycle",
+words:["دارم","دوست","دوچرخه","را","من"],
+answer:["من","دوچرخه","را","دوست","دارم"]
 }
 
 ];
 
+
 // =====================================
 // نمایش سوال
 // =====================================
-    // اضافه کردن XP کسب شده به دیتابیس پروفایل در پایان درس
 
-
-    function showQuestion() {
+function showQuestion() {
   if (current >= questions.length) {
     const finalXP = typeof getTotalXP === "function" ? getTotalXP() : xp;
 
@@ -311,6 +333,17 @@ answer:["من","یک","دوچرخه","دارم"]
   const content = document.getElementById("question-content");
   const optionsBox = document.getElementById("options");
   const wordBuilder = document.getElementById("word-builder");
+  const repeatBtn = document.getElementById("repeat-audio-btn");
+
+  if (repeatBtn) {
+    if (q.speak) {
+      repeatBtn.style.display = "inline-block";
+      repeatBtn.onclick = () => speak(q.speak);
+    } else {
+      repeatBtn.style.display = "none";
+      repeatBtn.onclick = null;
+    }
+  }
 
   title.innerText = q.question;
   content.innerHTML = "";
@@ -318,7 +351,6 @@ answer:["من","یک","دوچرخه","دارم"]
   wordBuilder.innerHTML = "";
 wordBuilder.classList.add("hidden");
 
-  // IMAGE SELECTION
   // IMAGE SELECTION
 if (q.type === "image") {
   optionsBox.classList.add("image-grid");
@@ -351,7 +383,7 @@ shuffleArray(q.options).forEach(opt => {
 
   // AUDIO
   if (q.type === "audio") {
-    content.innerHTML = `<button class="audio-btn" onclick="speak('${q.speak}')">🔊 پخش</button>`;
+    content.innerHTML = "";
 
 shuffleArray(q.options).forEach(opt => {
       let b = document.createElement("button");
@@ -362,8 +394,7 @@ shuffleArray(q.options).forEach(opt => {
     });
   }
 
-  // BUILD ENGLISH
-    // BUILD ENGLISH / FA
+  // BUILD ENGLISH / FA
 
   else if (q.type === "build-en" || q.type === "build-fa") {
   content.innerHTML = `<p>${q.text}</p>`;
@@ -418,6 +449,26 @@ shuffleArray(q.words).forEach(w => {
   });
 }
 
+async function safeAddXP(amount) {
+  try {
+    if (typeof addXP === "function") {
+      await addXP(amount);
+    }
+  } catch (err) {
+    console.warn("ثبت XP رو سرور ناموفق بود (آفلاین یا خطای شبکه):", err);
+  }
+}
+
+async function safeLoseHeart() {
+  try {
+    if (typeof loseHeart === "function") {
+      await loseHeart();
+    }
+  } catch (err) {
+    console.warn("کم کردن قلب رو سرور ناموفق بود (آفلاین یا خطای شبکه):", err);
+  }
+}
+
 async function checkBuild(selected, correct) {
   const s = selected.map(w => w.trim().toLowerCase());
   const c = correct.map(w => w.trim().toLowerCase());
@@ -425,27 +476,16 @@ async function checkBuild(selected, correct) {
   if (JSON.stringify(s) === JSON.stringify(c)) {
     xp += 5;
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
+    await safeAddXP(5);
 
     current++;
     showQuestion();
   } else {
     alert("اشتباه بود! دوباره تلاش کن.");
 
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
+    await safeLoseHeart();
 
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
+    updateHeartDisplay();
 
     if (typeof getHearts === "function" && getHearts() <= 0) {
       document.getElementById("app").innerHTML = `
@@ -465,27 +505,16 @@ async function select(ans) {
   if (String(ans).trim().toLowerCase() === String(correct).trim().toLowerCase()) {
     xp += 5;
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
+    await safeAddXP(5);
 
     current++;
     showQuestion();
   } else {
     alert("اشتباه بود! دوباره تلاش کن.");
 
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
+    await safeLoseHeart();
 
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
+    updateHeartDisplay();
 
     if (typeof getHearts === "function" && getHearts() <= 0) {
       document.getElementById("app").innerHTML = `
@@ -554,6 +583,3 @@ function shuffleArray(arr) {
 
   return array;
 }
-
-
-showQuestion(); 

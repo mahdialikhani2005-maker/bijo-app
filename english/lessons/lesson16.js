@@ -2,6 +2,21 @@ let current = 0;
 let xp = 0;
 
 function speak(text){
+  // اگه داخل اپ موبایل (Capacitor) اجرا میشه، از موتور صدای خودِ اندروید استفاده کن
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    try {
+      window.Capacitor.Plugins.TextToSpeech.speak({
+        text: text,
+        lang: "en-US",
+        rate: 0.9,
+        category: "ambient"
+      });
+    } catch (err) {
+      console.warn("خطا در پخش صدا (native):", err);
+    }
+    return;
+  }
+
   if (!window.speechSynthesis) return;
 
   const utter = new SpeechSynthesisUtterance(text);
@@ -12,25 +27,33 @@ function speak(text){
   speechSynthesis.speak(utter);
 }
 
-window.onload = function() {
-  if (typeof checkAndRegenHearts === 'function') {
-  checkAndRegenHearts();
-}
-
-    if (typeof getHearts === 'function') {
-        const currentHearts = getHearts();
-        const heartElement = document.getElementById("heart-count");
-        if (heartElement) {
-            heartElement.textContent = currentHearts;
-        }
-        
-        // اگر قلب کاربر 0 بود، اجازه شروع درس را نده (اختیاری)
-        if (currentHearts <= 0) {
-            alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
-            window.location.href = "../home.html";
-        }
+window.onload = async function() {
+  // قبل از هر چیز، اطلاعات واقعی کاربر (قلب، XP) رو از سرور می‌گیریم
+  if (typeof initUserData === "function") {
+    try {
+      await initUserData();
+    } catch (err) {
+      console.warn("گرفتن اطلاعات کاربر ناموفق بود:", err);
     }
+  }
+
+  updateHeartDisplay();
+
+  if (typeof getHearts === "function" && getHearts() <= 0) {
+    alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
+    window.location.href = "../home.html";
+    return;
+  }
+
+  showQuestion();
 };
+
+function updateHeartDisplay() {
+  const heartElement = document.getElementById("heart-count");
+  if (heartElement && typeof getHearts === "function") {
+    heartElement.textContent = getHearts();
+  }
+}
 
 const questions = [
 
@@ -41,10 +64,10 @@ type:"image",
 question:"school کدام است؟",
 speak:"school",
 options:[
-{text:"hospital",image:"../../media/places/hospital.png"},
-{text:"school",image:"../../media/places/school.png"},
-{text:"store",image:"../../media/places/store.png"},
-{text:"park",image:"../../media/places/park.png"}
+{text:"hospital",image:"../../media/places/hospital.webp"},
+{text:"school",image:"../../media/places/school.webp"},
+{text:"store",image:"../../media/places/store.webp"},
+{text:"park",image:"../../media/places/park.webp"}
 ],
 answer:"school"
 },
@@ -54,10 +77,10 @@ type:"image",
 question:"hospital کدام است؟",
 speak:"hospital",
 options:[
-{text:"park",image:"../../media/places/park.png"},
-{text:"hospital",image:"../../media/places/hospital.png"},
-{text:"mosque",image:"../../media/places/mosque.png"},
-{text:"school",image:"../../media/places/school.png"}
+{text:"park",image:"../../media/places/park.webp"},
+{text:"hospital",image:"../../media/places/hospital.webp"},
+{text:"mosque",image:"../../media/places/mosque.webp"},
+{text:"school",image:"../../media/places/school.webp"}
 ],
 answer:"hospital"
 },
@@ -67,10 +90,10 @@ type:"image",
 question:"store کدام است؟",
 speak:"store",
 options:[
-{text:"school",image:"../../media/places/school.png"},
-{text:"store",image:"../../media/places/store.png"},
-{text:"mosque",image:"../../media/places/mosque.png"},
-{text:"hospital",image:"../../media/places/hospital.png"}
+{text:"school",image:"../../media/places/school.webp"},
+{text:"store",image:"../../media/places/store.webp"},
+{text:"mosque",image:"../../media/places/mosque.webp"},
+{text:"hospital",image:"../../media/places/hospital.webp"}
 ],
 answer:"store"
 },
@@ -80,10 +103,10 @@ type:"image",
 question:"park کدام است؟",
 speak:"park",
 options:[
-{text:"store",image:"../../media/places/store.png"},
-{text:"hospital",image:"../../media/places/hospital.png"},
-{text:"park",image:"../../media/places/park.png"},
-{text:"school",image:"../../media/places/school.png"}
+{text:"store",image:"../../media/places/store.webp"},
+{text:"hospital",image:"../../media/places/hospital.webp"},
+{text:"park",image:"../../media/places/park.webp"},
+{text:"school",image:"../../media/places/school.webp"}
 ],
 answer:"park"
 },
@@ -93,10 +116,10 @@ type:"image",
 question:"mosque کدام است؟",
 speak:"mosque",
 options:[
-{text:"park",image:"../../media/places/park.png"},
-{text:"school",image:"../../media/places/school.png"},
-{text:"hospital",image:"../../media/places/hospital.png"},
-{text:"mosque",image:"../../media/places/mosque.png"}
+{text:"park",image:"../../media/places/park.webp"},
+{text:"school",image:"../../media/places/school.webp"},
+{text:"hospital",image:"../../media/places/hospital.webp"},
+{text:"mosque",image:"../../media/places/mosque.webp"}
 ],
 answer:"mosque"
 },
@@ -106,7 +129,7 @@ answer:"mosque"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/places/school.png",
+image:"../../media/places/school.webp",
 options:["hospital","school","store","park"],
 answer:"school"
 },
@@ -114,7 +137,7 @@ answer:"school"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/places/hospital.png",
+image:"../../media/places/hospital.webp",
 options:["park","hospital","mosque","school"],
 answer:"hospital"
 },
@@ -122,7 +145,7 @@ answer:"hospital"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/places/store.png",
+image:"../../media/places/store.webp",
 options:["school","store","mosque","hospital"],
 answer:"store"
 },
@@ -130,7 +153,7 @@ answer:"store"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/places/park.png",
+image:"../../media/places/park.webp",
 options:["store","hospital","park","school"],
 answer:"park"
 },
@@ -138,7 +161,7 @@ answer:"park"
 {
 type:"word",
 question:"این تصویر چیست؟",
-image:"../../media/places/mosque.png",
+image:"../../media/places/mosque.webp",
 options:["park","school","hospital","mosque"],
 answer:"mosque"
 },
@@ -185,7 +208,7 @@ options:["park","school","hospital","mosque"],
 answer:"mosque"
 },
 
-/* BUILD EN */
+/* BUILD EN - جدید با تنوع */
 
 {
 type:"build-en",
@@ -198,41 +221,41 @@ answer:["This","is","a","school"]
 
 {
 type:"build-en",
-speak:"This is a hospital",
+speak:"I go to hospital",
 question:"جمله انگلیسی را بساز:",
-text:"این یک بیمارستان است",
-words:["hospital","a","is","This"],
-answer:["This","is","a","hospital"]
+text:"من به بیمارستان می‌روم",
+words:["go","to","hospital","I"],
+answer:["I","go","to","hospital"]
 },
 
 {
 type:"build-en",
-speak:"This is a store",
+speak:"She is at the store",
 question:"جمله انگلیسی را بساز:",
-text:"این یک فروشگاه است",
-words:["store","a","is","This"],
-answer:["This","is","a","store"]
+text:"او در فروشگاه است",
+words:["is","at","the","store","She"],
+answer:["She","is","at","the","store"]
 },
 
 {
 type:"build-en",
-speak:"This is a park",
+speak:"We are in the park",
 question:"جمله انگلیسی را بساز:",
-text:"این یک پارک است",
-words:["park","a","is","This"],
-answer:["This","is","a","park"]
+text:"ما در پارک هستیم",
+words:["are","in","the","park","We"],
+answer:["We","are","in","the","park"]
 },
 
 {
 type:"build-en",
-speak:"This is a mosque",
+speak:"He goes to mosque",
 question:"جمله انگلیسی را بساز:",
-text:"این یک مسجد است",
-words:["mosque","a","is","This"],
-answer:["This","is","a","mosque"]
+text:"او به مسجد می‌رود",
+words:["goes","to","mosque","He"],
+answer:["He","goes","to","mosque"]
 },
 
-/* BUILD FA */
+/* BUILD FA - جدید با تنوع */
 
 {
 type:"build-fa",
@@ -245,49 +268,48 @@ answer:["این","یک","مدرسه","است"]
 
 {
 type:"build-fa",
-speak:"This is a hospital",
+speak:"I go to hospital",
 question:"ترجمه را بساز:",
-text:"This is a hospital",
-words:["است","بیمارستان","یک","این"],
-answer:["این","یک","بیمارستان","است"]
+text:"I go to hospital",
+words:["می‌روم","به","بیمارستان","من"],
+answer:["من","به","بیمارستان","می‌روم"]
 },
 
 {
 type:"build-fa",
-speak:"This is a store",
+speak:"She is at the store",
 question:"ترجمه را بساز:",
-text:"This is a store",
-words:["است","فروشگاه","یک","این"],
-answer:["این","یک","فروشگاه","است"]
+text:"She is at the store",
+words:["است","در","فروشگاه","او"],
+answer:["او","در","فروشگاه","است"]
 },
 
 {
 type:"build-fa",
-speak:"This is a park",
+speak:"We are in the park",
 question:"ترجمه را بساز:",
-text:"This is a park",
-words:["است","پارک","یک","این"],
-answer:["این","یک","پارک","است"]
+text:"We are in the park",
+words:["هستیم","در","پارک","ما"],
+answer:["ما","در","پارک","هستیم"]
 },
 
 {
 type:"build-fa",
-speak:"This is a mosque",
+speak:"He goes to mosque",
 question:"ترجمه را بساز:",
-text:"This is a mosque",
-words:["است","مسجد","یک","این"],
-answer:["این","یک","مسجد","است"]
+text:"He goes to mosque",
+words:["می‌رود","به","مسجد","او"],
+answer:["او","به","مسجد","می‌رود"]
 }
 
 ];
 
+
 // =====================================
 // نمایش سوال
 // =====================================
-    // اضافه کردن XP کسب شده به دیتابیس پروفایل در پایان درس
 
-
-    function showQuestion() {
+function showQuestion() {
   if (current >= questions.length) {
     const finalXP = typeof getTotalXP === "function" ? getTotalXP() : xp;
 
@@ -311,6 +333,17 @@ answer:["این","یک","مسجد","است"]
   const content = document.getElementById("question-content");
   const optionsBox = document.getElementById("options");
   const wordBuilder = document.getElementById("word-builder");
+  const repeatBtn = document.getElementById("repeat-audio-btn");
+
+  if (repeatBtn) {
+    if (q.speak) {
+      repeatBtn.style.display = "inline-block";
+      repeatBtn.onclick = () => speak(q.speak);
+    } else {
+      repeatBtn.style.display = "none";
+      repeatBtn.onclick = null;
+    }
+  }
 
   title.innerText = q.question;
   content.innerHTML = "";
@@ -318,7 +351,6 @@ answer:["این","یک","مسجد","است"]
   wordBuilder.innerHTML = "";
 wordBuilder.classList.add("hidden");
 
-  // IMAGE SELECTION
   // IMAGE SELECTION
 if (q.type === "image") {
   optionsBox.classList.add("image-grid");
@@ -351,7 +383,7 @@ shuffleArray(q.options).forEach(opt => {
 
   // AUDIO
   if (q.type === "audio") {
-    content.innerHTML = `<button class="audio-btn" onclick="speak('${q.speak}')">🔊 پخش</button>`;
+    content.innerHTML = "";
 
 shuffleArray(q.options).forEach(opt => {
       let b = document.createElement("button");
@@ -362,8 +394,7 @@ shuffleArray(q.options).forEach(opt => {
     });
   }
 
-  // BUILD ENGLISH
-    // BUILD ENGLISH / FA
+  // BUILD ENGLISH / FA
 
   else if (q.type === "build-en" || q.type === "build-fa") {
   content.innerHTML = `<p>${q.text}</p>`;
@@ -418,6 +449,26 @@ shuffleArray(q.words).forEach(w => {
   });
 }
 
+async function safeAddXP(amount) {
+  try {
+    if (typeof addXP === "function") {
+      await addXP(amount);
+    }
+  } catch (err) {
+    console.warn("ثبت XP رو سرور ناموفق بود (آفلاین یا خطای شبکه):", err);
+  }
+}
+
+async function safeLoseHeart() {
+  try {
+    if (typeof loseHeart === "function") {
+      await loseHeart();
+    }
+  } catch (err) {
+    console.warn("کم کردن قلب رو سرور ناموفق بود (آفلاین یا خطای شبکه):", err);
+  }
+}
+
 async function checkBuild(selected, correct) {
   const s = selected.map(w => w.trim().toLowerCase());
   const c = correct.map(w => w.trim().toLowerCase());
@@ -425,27 +476,16 @@ async function checkBuild(selected, correct) {
   if (JSON.stringify(s) === JSON.stringify(c)) {
     xp += 5;
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
+    await safeAddXP(5);
 
     current++;
     showQuestion();
   } else {
     alert("اشتباه بود! دوباره تلاش کن.");
 
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
+    await safeLoseHeart();
 
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
+    updateHeartDisplay();
 
     if (typeof getHearts === "function" && getHearts() <= 0) {
       document.getElementById("app").innerHTML = `
@@ -465,27 +505,16 @@ async function select(ans) {
   if (String(ans).trim().toLowerCase() === String(correct).trim().toLowerCase()) {
     xp += 5;
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
+    await safeAddXP(5);
 
     current++;
     showQuestion();
   } else {
     alert("اشتباه بود! دوباره تلاش کن.");
 
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
+    await safeLoseHeart();
 
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
+    updateHeartDisplay();
 
     if (typeof getHearts === "function" && getHearts() <= 0) {
       document.getElementById("app").innerHTML = `
@@ -554,6 +583,3 @@ function shuffleArray(arr) {
 
   return array;
 }
-
-
-showQuestion(); 
