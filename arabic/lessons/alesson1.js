@@ -2,35 +2,56 @@ let current = 0;
 let xp = 0;
 
 function speak(text){
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    try {
+      window.Capacitor.Plugins.TextToSpeech.speak({
+        text: text,
+        lang: "ar-SA",
+        rate: 0.9,
+        category: "ambient"
+      });
+    } catch (err) {
+      console.warn("خطا در پخش صدا (native):", err);
+    }
+    return;
+  }
+
   if (!window.speechSynthesis) return;
 
   const utter = new SpeechSynthesisUtterance(text);
-  utter.lang = "ar";
+  utter.lang = "ar-SA";
   utter.rate = 0.9;
 
   speechSynthesis.cancel();
   speechSynthesis.speak(utter);
 }
 
-window.onload = function() {
-  if (typeof checkAndRegenHearts === 'function') {
-  checkAndRegenHearts();
-}
-
-    if (typeof getHearts === 'function') {
-        const currentHearts = getHearts();
-        const heartElement = document.getElementById("heart-count");
-        if (heartElement) {
-            heartElement.textContent = currentHearts;
-        }
-        
-        // اگر قلب کاربر 0 بود، اجازه شروع درس را نده (اختیاری)
-        if (currentHearts <= 0) {
-            alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
-            window.location.href = "../home.html";
-        }
+window.onload = async function() {
+  if (typeof initUserData === "function") {
+    try {
+      await initUserData();
+    } catch (err) {
+      console.warn("گرفتن اطلاعات کاربر ناموفق بود:", err);
     }
+  }
+
+  updateHeartDisplay();
+
+  if (typeof getHearts === "function" && getHearts() <= 0) {
+    alert("قلب شما تمام شده است! لطفاً منتظر بمانید یا قلب تهیه کنید.");
+    window.location.href = "../home.html";
+    return;
+  }
+
+  showQuestion();
 };
+
+function updateHeartDisplay() {
+  const heartElement = document.getElementById("heart-count");
+  if (heartElement && typeof getHearts === "function") {
+    heartElement.textContent = getHearts();
+  }
+}
 
 const questions = [
 
@@ -38,65 +59,65 @@ const questions = [
 
 {
 type:"image",
-question:"أي منها رجل ؟",
+question:"أي منها رجل؟",
 speak:"رجل",
 options:[
-{text:"امرأة",image:"../../media/people/woman.png"},
-{text:"رجل",image:"../../media/people/man.png"},
-{text:"ولد",image:"../../media/people/boy.png"},
-{text:"بنت",image:"../../media/people/girl.png"}
+{text:"امرأة",image:"../../media/people/woman.webp"},
+{text:"رجل",image:"../../media/people/man.webp"},
+{text:"ولد",image:"../../media/people/boy.webp"},
+{text:"بنت",image:"../../media/people/girl.webp"}
 ],
 answer:"رجل"
 },
 
 {
 type:"image",
-question:"أي منها امرأة ؟",
+question:"أي منها امرأة؟",
 speak:"امرأة",
 options:[
-{text:"بنت",image:"../../media/people/girl.png"},
-{text:"امرأة",image:"../../media/people/woman.png"},
-{text:"ولد",image:"../../media/people/boy.png"},
-{text:"رجل",image:"../../media/people/man.png"}
+{text:"بنت",image:"../../media/people/girl.webp"},
+{text:"امرأة",image:"../../media/people/woman.webp"},
+{text:"ولد",image:"../../media/people/boy.webp"},
+{text:"رجل",image:"../../media/people/man.webp"}
 ],
 answer:"امرأة"
 },
 
 {
 type:"image",
-question:"أي منها ولد ؟",
+question:"أي منها ولد؟",
 speak:"ولد",
 options:[
-{text:"رجل",image:"../../media/people/man.png"},
-{text:"ولد",image:"../../media/people/boy.png"},
-{text:"طفل",image:"../../media/people/baby.png"},
-{text:"بنت",image:"../../media/people/girl.png"}
+{text:"رجل",image:"../../media/people/man.webp"},
+{text:"ولد",image:"../../media/people/boy.webp"},
+{text:"طفل",image:"../../media/people/baby.webp"},
+{text:"بنت",image:"../../media/people/girl.webp"}
 ],
 answer:"ولد"
 },
 
 {
 type:"image",
-question:"أي منها بنت ؟",
+question:"أي منها بنت؟",
 speak:"بنت",
 options:[
-{text:"ولد",image:"../../media/people/boy.png"},
-{text:"رجل",image:"../../media/people/man.png"},
-{text:"بنت",image:"../../media/people/girl.png"},
-{text:"طفل",image:"../../media/people/baby.png"}
+{text:"ولد",image:"../../media/people/boy.webp"},
+{text:"رجل",image:"../../media/people/man.webp"},
+{text:"بنت",image:"../../media/people/girl.webp"},
+{text:"طفل",image:"../../media/people/baby.webp"}
 ],
 answer:"بنت"
 },
 
 {
 type:"image",
-question:"أي منها طفل ؟",
+question:"أي منها طفل؟",
 speak:"طفل",
 options:[
-{text:"بنت",image:"../../media/people/girl.png"},
-{text:"ولد",image:"../../media/people/boy.png"},
-{text:"رجل",image:"../../media/people/man.png"},
-{text:"طفل",image:"../../media/people/baby.png"}
+{text:"بنت",image:"../../media/people/girl.webp"},
+{text:"ولد",image:"../../media/people/boy.webp"},
+{text:"رجل",image:"../../media/people/man.webp"},
+{text:"طفل",image:"../../media/people/baby.webp"}
 ],
 answer:"طفل"
 },
@@ -106,7 +127,7 @@ answer:"طفل"
 {
 type:"word",
 question:"ما هذه الصورة؟",
-image:"../../media/people/man.png",
+image:"../../media/people/man.webp",
 options:["ولد","رجل","امرأة","بنت"],
 answer:"رجل"
 },
@@ -114,7 +135,7 @@ answer:"رجل"
 {
 type:"word",
 question:"ما هذه الصورة؟",
-image:"../../media/people/woman.png",
+image:"../../media/people/woman.webp",
 options:["امرأة","بنت","طفل","رجل"],
 answer:"امرأة"
 },
@@ -122,7 +143,7 @@ answer:"امرأة"
 {
 type:"word",
 question:"ما هذه الصورة؟",
-image:"../../media/people/boy.png",
+image:"../../media/people/boy.webp",
 options:["ولد","رجل","طفل","بنت"],
 answer:"ولد"
 },
@@ -130,7 +151,7 @@ answer:"ولد"
 {
 type:"word",
 question:"ما هذه الصورة؟",
-image:"../../media/people/girl.png",
+image:"../../media/people/girl.webp",
 options:["بنت","امرأة","ولد","طفل"],
 answer:"بنت"
 },
@@ -138,7 +159,7 @@ answer:"بنت"
 {
 type:"word",
 question:"ما هذه الصورة؟",
-image:"../../media/people/baby.png",
+image:"../../media/people/baby.webp",
 options:["طفل","ولد","بنت","رجل"],
 answer:"طفل"
 },
@@ -281,13 +302,12 @@ answer:["نوزاد","کوچک","است"]
 
 ];
 
+
 // =====================================
 // نمایش سوال
 // =====================================
-    // اضافه کردن XP کسب شده به دیتابیس پروفایل در پایان درس
 
-
-    function showQuestion() {
+function showQuestion() {
   if (current >= questions.length) {
     const finalXP = typeof getTotalXP === "function" ? getTotalXP() : xp;
 
@@ -311,6 +331,17 @@ answer:["نوزاد","کوچک","است"]
   const content = document.getElementById("question-content");
   const optionsBox = document.getElementById("options");
   const wordBuilder = document.getElementById("word-builder");
+  const repeatBtn = document.getElementById("repeat-audio-btn");
+
+  if (repeatBtn) {
+    if (q.speak) {
+      repeatBtn.style.display = "inline-block";
+      repeatBtn.onclick = () => speak(q.speak);
+    } else {
+      repeatBtn.style.display = "none";
+      repeatBtn.onclick = null;
+    }
+  }
 
   title.innerText = q.question;
   content.innerHTML = "";
@@ -318,7 +349,6 @@ answer:["نوزاد","کوچک","است"]
   wordBuilder.innerHTML = "";
 wordBuilder.classList.add("hidden");
 
-  // IMAGE SELECTION
   // IMAGE SELECTION
 if (q.type === "image") {
   optionsBox.classList.add("image-grid");
@@ -351,7 +381,7 @@ shuffleArray(q.options).forEach(opt => {
 
   // AUDIO
   if (q.type === "audio") {
-    content.innerHTML = `<button class="audio-btn" onclick="speak('${q.speak}')">🔊 پخش</button>`;
+    content.innerHTML = "";
 
 shuffleArray(q.options).forEach(opt => {
       let b = document.createElement("button");
@@ -362,10 +392,9 @@ shuffleArray(q.options).forEach(opt => {
     });
   }
 
-  // BUILD ENGLISH
-    // BUILD ENGLISH / FA
+  // BUILD ARABIC / FA
 
-  else if (q.type === "build-en" || q.type === "build-fa" || q.type === "build-ar") {
+  else if (q.type === "build-ar" || q.type === "build-fa") {
   content.innerHTML = `<p>${q.text}</p>`;
 
   const wordBuilder = document.getElementById("word-builder");
@@ -380,7 +409,7 @@ shuffleArray(q.options).forEach(opt => {
   wordBuilder.classList.remove("ltr", "rtl");
   optionsBox.classList.remove("ltr", "rtl");
 
-if (q.type === "build-en" || q.type === "build-ar") {
+  if (q.type === "build-ar") {
     wordBuilder.classList.add("ltr");
     optionsBox.classList.add("ltr");
   } else {
@@ -418,6 +447,26 @@ shuffleArray(q.words).forEach(w => {
   });
 }
 
+async function safeAddXP(amount) {
+  try {
+    if (typeof addXP === "function") {
+      await addXP(amount);
+    }
+  } catch (err) {
+    console.warn("ثبت XP رو سرور ناموفق بود (آفلاین یا خطای شبکه):", err);
+  }
+}
+
+async function safeLoseHeart() {
+  try {
+    if (typeof loseHeart === "function") {
+      await loseHeart();
+    }
+  } catch (err) {
+    console.warn("کم کردن قلب رو سرور ناموفق بود (آفلاین یا خطای شبکه):", err);
+  }
+}
+
 async function checkBuild(selected, correct) {
   const s = selected.map(w => w.trim().toLowerCase());
   const c = correct.map(w => w.trim().toLowerCase());
@@ -425,27 +474,16 @@ async function checkBuild(selected, correct) {
   if (JSON.stringify(s) === JSON.stringify(c)) {
     xp += 5;
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
+    await safeAddXP(5);
 
     current++;
     showQuestion();
   } else {
     alert("اشتباه بود! دوباره تلاش کن.");
 
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
+    await safeLoseHeart();
 
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
+    updateHeartDisplay();
 
     if (typeof getHearts === "function" && getHearts() <= 0) {
       document.getElementById("app").innerHTML = `
@@ -465,27 +503,16 @@ async function select(ans) {
   if (String(ans).trim().toLowerCase() === String(correct).trim().toLowerCase()) {
     xp += 5;
 
-    if (typeof addXP === "function") {
-      await addXP(5);
-    }
+    await safeAddXP(5);
 
     current++;
     showQuestion();
   } else {
     alert("اشتباه بود! دوباره تلاش کن.");
 
-    if (typeof loseHeart === "function") {
-      await loseHeart();
-    }
+    await safeLoseHeart();
 
-    if (typeof checkAndRegenHearts === "function") {
-      checkAndRegenHearts();
-    }
-
-    const heartElement = document.getElementById("heart-count");
-    if (heartElement && typeof getHearts === "function") {
-      heartElement.textContent = getHearts();
-    }
+    updateHeartDisplay();
 
     if (typeof getHearts === "function" && getHearts() <= 0) {
       document.getElementById("app").innerHTML = `
@@ -554,6 +581,3 @@ function shuffleArray(arr) {
 
   return array;
 }
-
-
-showQuestion(); 
