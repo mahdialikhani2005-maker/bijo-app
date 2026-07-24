@@ -6,7 +6,7 @@
 // ⚠️ وقتی بعداً یه سرور دائمی/واقعی گرفتی، فقط همین یه خط رو عوض کن:
 const REMOTE_BASE = "https://mahdialikhani2005-maker.github.io/bijo-app";
 
-const LESSON_CACHE_NAME = "bijo-lessons-v2";
+const LESSON_CACHE_NAME = "bijo-lessons-v3";
 
 function isLessonDownloaded(lessonId) {
   return localStorage.getItem(`lesson_downloaded_${LESSON_CACHE_NAME}_${lessonId}`) === "1";
@@ -25,6 +25,23 @@ function resolveUrls(relativePath) {
   return { localUrl: localUrlObj.href, remoteUrl };
 }
 
+const IMAGE_EXTENSIONS = [".webp", ".png", ".jpg", ".jpeg", ".gif"];
+
+function isImageUrl(url) {
+  return IMAGE_EXTENSIONS.some(ext => url.toLowerCase().endsWith(ext));
+}
+
+// علاوه بر کش کردن، عکس رو واقعاً تو مرورگر لود می‌کنه تا کاملاً
+// آماده و رندرشده باشه (نه فقط تو کش، بلکه دیگه هیچ تأخیری نداشته باشه)
+function preloadImage(url) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = resolve;
+    img.onerror = resolve; // حتی اگه fail بشه، جلوی بقیه رو نگیره
+    img.src = url;
+  });
+}
+
 async function downloadLesson(lessonId, relativeUrls) {
   if (isLessonDownloaded(lessonId)) return;
 
@@ -38,15 +55,22 @@ async function downloadLesson(lessonId, relativeUrls) {
         const { localUrl, remoteUrl } = resolveUrls(relativePath);
 
         const already = await cache.match(localUrl);
-        if (already) return true;
-
-        const res = await fetch(remoteUrl);
-        if (res.ok) {
-          await cache.put(localUrl, res.clone());
-          return true;
+        if (!already) {
+          const res = await fetch(remoteUrl);
+          if (res.ok) {
+            await cache.put(localUrl, res.clone());
+          } else {
+            console.warn("دانلود این فایل ناموفق بود (status):", remoteUrl, res.status);
+            return false;
+          }
         }
-        console.warn("دانلود این فایل ناموفق بود (status):", remoteUrl, res.status);
-        return false;
+
+        // برای عکس‌ها، یه پیش‌بارگذاری واقعی هم انجام بده
+        if (isImageUrl(localUrl)) {
+          await preloadImage(localUrl);
+        }
+
+        return true;
       } catch (err) {
         console.warn("دانلود این فایل ناموفق بود:", relativePath, err);
         return false;
