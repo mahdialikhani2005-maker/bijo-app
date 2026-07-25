@@ -112,8 +112,22 @@ export function applyCourseFromQuery() {
   }
 }
 
+/**
+ * تشخیص خودکار دوره از رو خودِ مسیر صفحه — مثلاً وقتی از home.html
+ * رو کارت «فرانسوی» می‌زنی و میری french/index.html، هیچ query
+ * پارامتری نیست، ولی همینجا از رو اولین بخش مسیر (french) تشخیص
+ * می‌دیم که دوره‌ی فعلی عوض شده.
+ */
+export function applyCourseFromPath() {
+  const firstSegment = location.pathname.split("/").filter(Boolean)[0];
+  if (firstSegment && SUPPORTED_COURSES.includes(firstSegment)) {
+    setCurrentCourse(firstSegment);
+  }
+}
+
 // اجرای خودکار
 document.addEventListener("DOMContentLoaded", () => {
   applyCourseFromQuery();
+  applyCourseFromPath();
   wireBottomNav();
 });
