@@ -23,7 +23,7 @@ class User(Base):
     # مهمون استفاده میشه: اگه همون گوشی دوباره guest بسازه (حتی بعد از
     # پاک کردن دیتای اپ)، به‌جای ساختن یه کاربر تازه با ۵ دل کامل،
     # همون کاربر قبلی (با دل‌های واقعی باقی‌مونده‌ش) برگردونده میشه.
-    device_id = Column(String, unique=True, index=True, nullable=True)
+    device_id = Column(String, index=True, nullable=True)
 
     # relationships
     heart = relationship("Heart", back_populates="user", uselist=False, cascade="all, delete")

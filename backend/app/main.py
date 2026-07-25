@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from sqlalchemy import text
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -17,8 +19,29 @@ from app.routes import heart as heart_routes
 from app.routes import premium as premium_routes
 from app.routes import review as review_routes
 
-# ساخت جداول دیتابیس
+# ساخت جداول دیتابیس (فقط جداول جدیدی که کلاً وجود ندارن رو می‌سازه؛
+# به جدول‌های موجود ستون اضافه نمی‌کنه)
 Base.metadata.create_all(bind=engine)
+
+
+# ---------------------------------------------------------------
+# مینی-مایگریشن دستی: چون Alembic هنوز راه‌اندازی نشده و رندر (پلن
+# رایگان Postgres) دسترسی Shell نمیده، ستون‌هایی که به جدول‌های از
+# قبل موجود اضافه می‌کنیم رو همینجا با IF NOT EXISTS اضافه می‌کنیم.
+# این کد امنه و هر بار سرور بالا بیاد بدون خطا دوباره اجرا میشه
+# (چون IF NOT EXISTS از خطای "ستون از قبل هست" جلوگیری می‌کنه).
+# ---------------------------------------------------------------
+def run_startup_migrations():
+    statements = [
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS device_id VARCHAR",
+    ]
+    with engine.connect() as conn:
+        for stmt in statements:
+            conn.execute(text(stmt))
+        conn.commit()
+
+
+run_startup_migrations()
 
 app = FastAPI(
     title="Language Learning App API",
