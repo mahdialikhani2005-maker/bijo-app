@@ -1,4 +1,12 @@
-const CACHE_NAME = 'bijo-v1';
+// -------------------------------------------------------------
+// هر بار که یه تغییر مهم (که باید رو گوشی کاربرا جایگزین بشه) دادی،
+// این عدد رو زیاد کن. با همین یه خط، خودکار کش قدیمی پاک میشه و
+// دیگه لازم نیست از کاربر بخوای Clear Data کنه.
+// نکته: باید هماهنگ با LESSON_CACHE_NAME تو lessonDownloader.js باشه
+// -------------------------------------------------------------
+const SHELL_CACHE_NAME = 'bijo-shell-v3';
+const CURRENT_LESSON_CACHE_NAME = 'bijo-lessons-v3';
+
 const urlsToCache = [
   '/',
   '/home.html',
@@ -9,9 +17,22 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', event => {
+  self.skipWaiting(); // نسخه‌ی جدید بدون معطلی فعال بشه
   event.waitUntil(
-    caches.open(CACHE_NAME)
+    caches.open(SHELL_CACHE_NAME)
       .then(cache => cache.addAll(urlsToCache))
+  );
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames
+          .filter(name => name !== SHELL_CACHE_NAME && name !== CURRENT_LESSON_CACHE_NAME)
+          .map(name => caches.delete(name))
+      );
+    }).then(() => self.clients.claim())
   );
 });
 
