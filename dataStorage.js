@@ -29,8 +29,22 @@ async function apiRequest(url, options = {}) {
   let data = {};
   try { data = await res.json(); } catch {}
 
+  // اگه سرور بگه توکن نامعتبره (مثلاً بعد از پاک شدن/ری‌ست دیتابیس)،
+  // سشن قدیمی رو پاک کن تا initUserData بتونه یه مهمون تازه بسازه.
+  // بدون این، اپ برای همیشه با یه توکن مرده کار می‌کنه: هیچی سیو نمیشه
+  // (دل/XP/درس/مرور) بدون این‌که هیچ خطای قابل‌دیدنی به کاربر نشون داده بشه.
+  if (res.status === 401 && !options.skipAuth) {
+    clearInvalidSession();
+  }
+
   if (!res.ok) throw new Error(data.detail || "خطای سرور");
   return data;
+}
+
+function clearInvalidSession() {
+  currentUser = null;
+  localStorage.removeItem("user");
+  localStorage.removeItem("access_token");
 }
 
 // ======================
@@ -325,13 +339,34 @@ async function getReviewStatus() {
 
 // اگه کاربر نه واقعی لاگین کرده نه اکانت مهمان داره، خودکار یه اکانت
 // مهمان براش می‌سازه (بدون نیاز به پر کردن هیچ فرمی)
+// اگه اپ اندروید یه bridge جاوااسکریپتی برای گرفتن شناسه‌ی گوشی
+// (Android ID) تعریف کرده باشه، از همینجا می‌خونیمش. اسم دقیق این
+// bridge باید با چیزی که تو MainActivity ست شده هماهنگ باشه —
+// فعلاً چند تا اسم رایج رو امتحان می‌کنیم، اگه هیچ‌کدوم نبود null
+// برمی‌گرده و رفتار قبلی (guest بدون device_id) ادامه پیدا می‌کنه.
+function getDeviceIdIfAvailable() {
+  try {
+    if (window.AndroidBridge && typeof window.AndroidBridge.getDeviceId === "function") {
+      return window.AndroidBridge.getDeviceId();
+    }
+    if (window.Android && typeof window.Android.getDeviceId === "function") {
+      return window.Android.getDeviceId();
+    }
+  } catch (err) {
+    console.warn("گرفتن شناسه‌ی گوشی ناموفق بود:", err);
+  }
+  return null;
+}
+
 async function ensureGuestSession() {
   if (isLoggedIn()) return;
 
   try {
+    const deviceId = getDeviceIdIfAvailable();
     const user = await apiRequest(`${API_BASE}/guest`, {
       method: "POST",
-      skipAuth: true
+      skipAuth: true,
+      body: JSON.stringify({ device_id: deviceId })
     });
     saveUser(user);
   } catch (err) {
@@ -344,6 +379,14 @@ async function initUserData() {
   await ensureGuestSession();
   await fetchHearts();
   await fetchXP();
+
+  // اگه توکن ذخیره‌شده مرده بود (سرور ۴۰۱ داد)، apiRequest همین الان
+  // isLoggedIn رو false کرده. یه بار دیگه، از صفر، مهمون تازه بساز.
+  if (!isLoggedIn()) {
+    await ensureGuestSession();
+    await fetchHearts();
+    await fetchXP();
+  }
 }
 
 // ======================

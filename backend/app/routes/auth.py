@@ -25,6 +25,26 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class GuestRequest(BaseModel):
+    # شناسه‌ی گوشی (مثلاً Android ID) — اختیاریه چون کلاینت‌های قدیمی‌تر
+    # ممکنه اصلاً نفرستنش؛ در اون صورت رفتار قبلی (guest تازه) ادامه پیدا می‌کنه
+    device_id: str | None = None
+
+
+def _issue_token_response(user: User, message: str) -> dict:
+    access_token = create_access_token(data={"sub": str(user.id)})
+    return {
+        "message": message,
+        "access_token": access_token,
+        "token_type": "bearer",
+        "id": user.id,
+        "username": user.username,
+        "full_name": user.full_name,
+        "phone_number": user.phone_number,
+        "role": user.role
+    }
+
+
 @router.post("/register")
 def register(data: RegisterRequest, db: Session = Depends(get_db)):
 
@@ -49,18 +69,7 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(new_user)
 
-        access_token = create_access_token(data={"sub": str(new_user.id)})
-
-        return {
-            "message": "registered",
-            "access_token": access_token,
-            "token_type": "bearer",
-            "id": new_user.id,
-            "username": new_user.username,
-            "full_name": new_user.full_name,
-            "phone_number": new_user.phone_number,
-            "role": new_user.role
-        }
+        return _issue_token_response(new_user, "registered")
 
     except IntegrityError:
         db.rollback()
@@ -75,24 +84,25 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
     if not user or not verify_password(data.password, user.password_hash):
         raise HTTPException(status_code=400, detail="نام کاربری یا رمز عبور اشتباه است")
 
-    access_token = create_access_token(data={"sub": str(user.id)})
-
-    return {
-        "message": "logged in",
-        "access_token": access_token,
-        "token_type": "bearer",
-        "id": user.id,
-        "username": user.username,
-        "full_name": user.full_name,
-        "phone_number": user.phone_number,
-        "role": user.role
-    }
+    return _issue_token_response(user, "logged in")
 
 
-# ساخت خودکار یه اکانت مهمان، برای کاربرایی که بدون ثبت‌نام
-# می‌خوان از اپ استفاده کنن. قلب/XP همچنان از سرور کنترل میشه.
+# ساخت (یا برگردوندن) اکانت مهمان.
+# اگه device_id فرستاده بشه و قبلاً یه guest با همین device_id ساخته شده
+# باشه، همون کاربر قدیمی (با دل/XP واقعیش) برگردونده میشه — نه یه ۵-دل
+# تازه. این جلوی سوءاستفاده‌ی «پاک کردن دیتای اپ = دل بی‌نهایت» رو می‌گیره.
 @router.post("/guest")
-def create_guest(db: Session = Depends(get_db)):
+def create_guest(data: GuestRequest | None = None, db: Session = Depends(get_db)):
+    device_id = data.device_id if data else None
+
+    if device_id:
+        existing = db.query(User).filter(
+            User.device_id == device_id,
+            User.role == "guest"
+        ).first()
+        if existing:
+            return _issue_token_response(existing, "guest resumed")
+
     guest_suffix = uuid.uuid4().hex[:10]
 
     new_user = User(
@@ -100,22 +110,12 @@ def create_guest(db: Session = Depends(get_db)):
         username=f"guest_{guest_suffix}",
         phone_number=f"guest_{guest_suffix}",
         password_hash=hash_password(uuid.uuid4().hex),  # رمز تصادفی، هیچ‌وقت به کاربر نشون داده نمیشه
-        role="guest"
+        role="guest",
+        device_id=device_id
     )
 
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
 
-    access_token = create_access_token(data={"sub": str(new_user.id)})
-
-    return {
-        "message": "guest created",
-        "access_token": access_token,
-        "token_type": "bearer",
-        "id": new_user.id,
-        "username": new_user.username,
-        "full_name": new_user.full_name,
-        "phone_number": new_user.phone_number,
-        "role": new_user.role
-    }
+    return _issue_token_response(new_user, "guest created")
