@@ -29,22 +29,8 @@ async function apiRequest(url, options = {}) {
   let data = {};
   try { data = await res.json(); } catch {}
 
-  // اگه سرور بگه توکن نامعتبره (مثلاً بعد از پاک شدن/ری‌ست دیتابیس)،
-  // سشن قدیمی رو پاک کن تا initUserData بتونه یه مهمون تازه بسازه.
-  // بدون این، اپ برای همیشه با یه توکن مرده کار می‌کنه: هیچی سیو نمیشه
-  // (دل/XP/درس/مرور) بدون این‌که هیچ خطای قابل‌دیدنی به کاربر نشون داده بشه.
-  if (res.status === 401 && !options.skipAuth) {
-    clearInvalidSession();
-  }
-
   if (!res.ok) throw new Error(data.detail || "خطای سرور");
   return data;
-}
-
-function clearInvalidSession() {
-  currentUser = null;
-  localStorage.removeItem("user");
-  localStorage.removeItem("access_token");
 }
 
 // ======================
@@ -260,113 +246,18 @@ async function refreshUserStats() {
 }
 
 // ======================
-// LESSON COMPLETION
-// ======================
-
-// words: [{ term, translation }, ...] — دقیقاً همون آرایه‌ای که تو
-// intro.js زیر allLessons[lessonId].words هست (فیلدهای en/fa رو به
-// term/translation نگاشت بده). بک‌اند خودش کلمات جدید رو می‌سازه
-// (upsert روی course_slug+term)، نیازی به seed از قبل نیست.
-async function completeLesson(courseSlug, lessonSlug, words = []) {
-  if (!isLoggedIn()) return null;
-
-  try {
-    return await apiRequest(`${API_BASE}/progress/lesson-complete`, {
-      method: "POST",
-      body: JSON.stringify({
-        course_slug: courseSlug,
-        lesson_slug: lessonSlug,
-        words
-      })
-    });
-  } catch (err) {
-    console.error("خطا در ثبت اتمام درس:", err);
-    return null;
-  }
-}
-
-// ======================
-// REVIEW
-// ======================
-
-// فقط کلماتی که کاربر تو همین دوره (courseSlug) یاد گرفته برمی‌گرده —
-// مرور دوره‌های مختلف با هم قاطی نمیشه
-async function fetchReviewWords(courseSlug, count = 20) {
-  if (!isLoggedIn()) return [];
-
-  try {
-    return await apiRequest(`${API_BASE}/review/words?course_slug=${encodeURIComponent(courseSlug)}&count=${count}`, {
-      method: "GET"
-    });
-  } catch (err) {
-    console.error("خطا در گرفتن کلمات مرور:", err);
-    return [];
-  }
-}
-
-// نکته‌ی مهم: این تابع را فقط از صفحه‌ی مرور صدا بزن، هیچ‌وقت loseHeart()
-// را در صفحه‌ی مرور فراخوانی نکن — جواب غلط در مرور دل کم نمی‌کند.
-async function submitReviewAnswers(wordIds) {
-  if (!isLoggedIn()) return { hearts_earned: 0, heart_count: getHearts() };
-
-  try {
-    const data = await apiRequest(`${API_BASE}/review/submit`, {
-      method: "POST",
-      body: JSON.stringify({ word_ids: wordIds })
-    });
-    heartsCache = data.heart_count;
-    return data;
-  } catch (err) {
-    console.error("خطا در ثبت نتیجه‌ی مرور:", err);
-    return { hearts_earned: 0, heart_count: getHearts() };
-  }
-}
-
-async function getReviewStatus() {
-  if (!isLoggedIn()) return { can_earn_heart: false, seconds_until_next_reward: null };
-
-  try {
-    return await apiRequest(`${API_BASE}/review/status`, { method: "GET" });
-  } catch (err) {
-    console.error("خطا در گرفتن وضعیت مرور:", err);
-    return { can_earn_heart: false, seconds_until_next_reward: null };
-  }
-}
-
-// ======================
 // INIT
 // ======================
 
 // اگه کاربر نه واقعی لاگین کرده نه اکانت مهمان داره، خودکار یه اکانت
 // مهمان براش می‌سازه (بدون نیاز به پر کردن هیچ فرمی)
-// اگه اپ اندروید یه bridge جاوااسکریپتی برای گرفتن شناسه‌ی گوشی
-// (Android ID) تعریف کرده باشه، از همینجا می‌خونیمش. اسم دقیق این
-// bridge باید با چیزی که تو MainActivity ست شده هماهنگ باشه —
-// فعلاً چند تا اسم رایج رو امتحان می‌کنیم، اگه هیچ‌کدوم نبود null
-// برمی‌گرده و رفتار قبلی (guest بدون device_id) ادامه پیدا می‌کنه.
-function getDeviceIdIfAvailable() {
-  try {
-    if (window.AndroidBridge && typeof window.AndroidBridge.getDeviceId === "function") {
-      return window.AndroidBridge.getDeviceId();
-    }
-    if (window.Android && typeof window.Android.getDeviceId === "function") {
-      return window.Android.getDeviceId();
-    }
-  } catch (err) {
-    console.warn("گرفتن شناسه‌ی گوشی ناموفق بود:", err);
-  }
-  return null;
-}
-
 async function ensureGuestSession() {
   if (isLoggedIn()) return;
 
   try {
-    const deviceId = getDeviceIdIfAvailable();
     const user = await apiRequest(`${API_BASE}/guest`, {
       method: "POST",
-      skipAuth: true,
-      body: JSON.stringify({ device_id: deviceId })
+      skipAuth: true
     });
     saveUser(user);
   } catch (err) {
@@ -379,14 +270,6 @@ async function initUserData() {
   await ensureGuestSession();
   await fetchHearts();
   await fetchXP();
-
-  // اگه توکن ذخیره‌شده مرده بود (سرور ۴۰۱ داد)، apiRequest همین الان
-  // isLoggedIn رو false کرده. یه بار دیگه، از صفر، مهمون تازه بساز.
-  if (!isLoggedIn()) {
-    await ensureGuestSession();
-    await fetchHearts();
-    await fetchXP();
-  }
 }
 
 // ======================
@@ -409,15 +292,79 @@ window.buyPremium = buyPremium;
 window.getHearts = getHearts;
 window.loseHeart = loseHeart;
 window.fetchHearts = fetchHearts;
-window.checkAndRegenHearts = checkAndRegenHearts;
-window.getTimeUntilNextHeart = getTimeUntilNextHeart;
 
 window.addXP = addXP;
 window.fetchXP = fetchXP;
 window.getTotalXP = getTotalXP;
 window.refreshUserStats = refreshUserStats;
 
-window.completeLesson = completeLesson;
-window.fetchReviewWords = fetchReviewWords;
-window.submitReviewAnswers = submitReviewAnswers;
-window.getReviewStatus = getReviewStatus;
+// ======================
+// اجبار به آپدیت
+// ======================
+
+function isVersionOlder(current, required) {
+  const c = String(current).split(".").map(Number);
+  const r = String(required).split(".").map(Number);
+  for (let i = 0; i < Math.max(c.length, r.length); i++) {
+    const cv = c[i] || 0;
+    const rv = r[i] || 0;
+    if (cv < rv) return true;
+    if (cv > rv) return false;
+  }
+  return false;
+}
+
+function showForceUpdateOverlay(message, updateUrl) {
+  if (document.getElementById("force-update-overlay")) return;
+
+  const overlay = document.createElement("div");
+  overlay.id = "force-update-overlay";
+  overlay.style.cssText =
+    "position:fixed; inset:0; background:rgba(0,0,0,0.94); color:#fff; " +
+    "z-index:99999; display:flex; flex-direction:column; align-items:center; " +
+    "justify-content:center; text-align:center; padding:32px; " +
+    "font-family:sans-serif; direction:rtl;";
+
+  overlay.innerHTML =
+    '<div style="font-size:48px; margin-bottom:16px;">🔄</div>' +
+    '<p style="font-size:16px; line-height:1.8; margin-bottom:24px; max-width:320px;">' +
+    message +
+    "</p>" +
+    '<button id="force-update-btn" style="background:#58cc02; color:white; ' +
+    'border:none; padding:14px 32px; border-radius:16px; font-size:16px; ' +
+    'font-weight:bold; cursor:pointer;">به‌روزرسانی</button>';
+
+  document.body.appendChild(overlay);
+
+  document.getElementById("force-update-btn").onclick = () => {
+    window.open(updateUrl, "_blank");
+  };
+}
+
+// این تابع رو باید تو home.html (نقطه‌ی ورود اپ) صدا زد
+async function checkForForcedUpdate() {
+  try {
+    const res = await fetch(
+      "https://mahdialikhani2005-maker.github.io/bijo-app/version.json",
+      { cache: "no-store" }
+    );
+    if (!res.ok) return;
+
+    const data = await res.json();
+
+    if (typeof APP_VERSION !== "undefined" && isVersionOlder(APP_VERSION, data.min_version)) {
+      showForceUpdateOverlay(data.message, data.update_url);
+    }
+  } catch (err) {
+    console.warn("چک کردن نسخه‌ی اپ ناموفق بود:", err);
+  }
+}
+
+window.checkForForcedUpdate = checkForForcedUpdate;
+
+// آیا کاربر فعلی یه اکانت مهمانه (نه ثبت‌نام واقعی)؟
+function isGuestUser() {
+  return !!(currentUser && currentUser.role === "guest");
+}
+
+window.isGuestUser = isGuestUser;
